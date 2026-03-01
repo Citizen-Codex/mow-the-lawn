@@ -1,25 +1,8 @@
 import random
 from collections import deque
-from typing import Literal, TypeAlias, TypedDict
 
-from visualize import render_grid, render_grid_with_path, render_path
-
-directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-Move: TypeAlias = Literal["up", "down", "left", "right"]
-Point: TypeAlias = tuple[int, int]
-Grid: TypeAlias = list[list[int]]
-
-move_deltas = {
-    "up": (-1, 0),
-    "down": (1, 0),
-    "left": (0, -1),
-    "right": (0, 1),
-}
-
-
-class Path(TypedDict):
-    start: Point | None
-    moves: list[Move]
+from grid_types import Point, Grid, Move, Path, MOVE_DELTAS
+from visualize import path_stats, show_grid_path_tk, show_grid_tk
 
 
 def can_remove(grid: Grid, x: int, y: int) -> bool:
@@ -30,7 +13,7 @@ def can_remove(grid: Grid, x: int, y: int) -> bool:
         return False
 
     neighbors: list[Point] = []
-    for dx, dy in directions:
+    for dx, dy in MOVE_DELTAS.values():
         nx, ny = x + dx, y + dy
         if 0 <= nx < n and 0 <= ny < n and grid[nx][ny] == 1:
             neighbors.append((nx, ny))
@@ -44,7 +27,7 @@ def can_remove(grid: Grid, x: int, y: int) -> bool:
 
     while queue:
         cx, cy = queue.popleft()
-        for dx, dy in directions:
+        for dx, dy in MOVE_DELTAS.values():
             nx, ny = cx + dx, cy + dy
             if not (0 <= nx < n and 0 <= ny < n):
                 continue
@@ -84,7 +67,7 @@ def create_random_grid(n: int, s: int) -> Grid:
                 if removed >= max_removed:
                     break
 
-            dx, dy = directions[rng.randrange(len(directions))]
+            dx, dy = MOVE_DELTAS[rng.choice(list(MOVE_DELTAS.keys()))]
             nx, ny = x + dx, y + dy
             if 0 <= nx < n and 0 <= ny < n:
                 x, y = nx, ny
@@ -115,12 +98,12 @@ def shortest_path_moves(grid: Grid, start: Point, target: Point) -> list[Move] |
     parents: dict[Point, tuple[Point, Move]] = {}
     visited = {start}
 
-    ordered_moves: list[Move] = ["up", "down", "left", "right"]
+    ordered_moves: list[Move] = ["u", "d", "l", "r"]
 
     while queue:
         cx, cy = queue.popleft()
         for move_name in ordered_moves:
-            dx, dy = move_deltas[move_name]
+            dx, dy = MOVE_DELTAS[move_name]
             nx, ny = cx + dx, cy + dy
 
             if not (0 <= nx < rows and 0 <= ny < cols):
@@ -180,7 +163,7 @@ def snake_solver(
             continue
 
         for move in path_moves:
-            dx, dy = move_deltas[move]
+            dx, dy = MOVE_DELTAS[move]
             current = (current[0] + dx, current[1] + dy)
             moves.append(move)
 
@@ -193,13 +176,16 @@ if __name__ == "__main__":
     demo_grid = create_random_grid(example_n, example_seed)
 
     print(f"Simulated {example_n}x{example_n} grid (seed={example_seed})")
-    print("1 = present, 0 = removed\n")
-    print(render_grid(demo_grid))
+    print("Launching empty-grid visualizer...")
+
+    launched_grid = show_grid_tk(demo_grid, title="Grid Visualizer")
+    if not launched_grid:
+        print("Grid visualizer could not start (likely no display environment).")
 
     path = snake_solver(demo_grid)
-    print("\nZig-zag path")
-    print(render_path(path))
+    print(path_stats(path))
+    print("Launching path visualizer...")
 
-    print("\nGrid with path overlay")
-    print("Legend: S=start, E=end, *=visited, .=open, 0=removed\n")
-    print(render_grid_with_path(demo_grid, path))
+    launched = show_grid_path_tk(demo_grid, path, title="Snake Path Visualizer")
+    if not launched:
+        print("Path visualizer could not start (likely no display environment).")
