@@ -33,7 +33,7 @@ def create_labelled_paths(
     return dataframe
 
 
-def main() -> None:
+def simulate() -> None:
     parser = argparse.ArgumentParser(
         description="Generate labelled snake/spiral path data as CSV"
     )
@@ -51,4 +51,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    simulate()
