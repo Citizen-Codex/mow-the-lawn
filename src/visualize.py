@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import Any
 
-from grid_types import Grid, MOVE_DELTAS, Path, Point
+from src.shared_types import Grid, MOVE_DELTAS, Path, Point
 
 
 def trace_path_points(path: Path) -> list[Point]:
@@ -30,8 +30,10 @@ def calculate_visit_counts(points: list[Point]) -> dict[Point, int]:
 def path_stats(path: Path) -> str:
     points = trace_path_points(path)
     counts = calculate_visit_counts(points)
-    overlap_cells = sum(1 for _, count in counts.items() if count > 1)
-    return f"Start: {path['start']} | Moves: {len(path['moves'])} | Overlap cells: {overlap_cells}"
+    overlaps = sum(count - 1 for count in counts.values() if count > 1)
+    return (
+        f"Start: {path['start']} | Moves: {len(path['moves'])} | Overlaps: {overlaps}"
+    )
 
 
 def _draw_base_grid(
@@ -202,8 +204,8 @@ def show_grid_path_tk(
                     x0 + 5, y0 + 5, x1 - 5, y1 - 5, outline="#16a34a", width=3
                 )
                 canvas.create_text(
-                    (x0 + x1) / 2,
-                    y0 + 11,
+                    x0 + 12,
+                    y0 + 12,
                     text="S",
                     fill="#15803d",
                     font=("TkDefaultFont", 10, "bold"),
@@ -214,11 +216,11 @@ def show_grid_path_tk(
             if 0 <= e_row < rows and 0 <= e_col < cols and grid[e_row][e_col] == 1:
                 x0, y0, x1, y1 = cell_bbox(e_row, e_col)
                 canvas.create_rectangle(
-                    x0 + 8, y0 + 8, x1 - 8, y1 - 8, outline="#dc2626", width=3
+                    x0 + 5, y0 + 5, x1 - 5, y1 - 5, outline="#dc2626", width=3
                 )
                 canvas.create_text(
-                    (x0 + x1) / 2,
-                    y1 - 10,
+                    x0 + 12,
+                    y0 + 12,
                     text="E",
                     fill="#b91c1c",
                     font=("TkDefaultFont", 10, "bold"),
