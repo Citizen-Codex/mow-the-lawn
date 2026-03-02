@@ -1,3 +1,4 @@
+import argparse
 from src.grid import create_random_grid
 from src.solvers import snake_solver, spiral_solver
 from src.visualize import path_stats, show_grid_path_tk, show_grid_tk
@@ -35,4 +36,11 @@ def main(n: int, seed: int):
 
 
 if __name__ == "__main__":
-    main(12, 0)
+    parser = argparse.ArgumentParser(
+        description="View and solve paths for a grid size and seed"
+    )
+    parser.add_argument("n", type=int, help="Grid size (size x size)")
+    parser.add_argument("seed", type=int, help="Seed")
+    args = parser.parse_args()
+
+    main(args.n, args.seed)

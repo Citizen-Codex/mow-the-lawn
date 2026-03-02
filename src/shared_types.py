@@ -1,6 +1,7 @@
 from typing import Literal, TypeAlias, TypedDict
 
 Move: TypeAlias = Literal["u", "d", "l", "r"]
+MoveStrategy = Literal["shortest", "least_overlap"]
 Point: TypeAlias = tuple[int, int]
 Grid: TypeAlias = list[list[int]]
 

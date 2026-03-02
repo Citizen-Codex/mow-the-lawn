@@ -1,6 +1,22 @@
 from collections import deque
+from heapq import heappop, heappush
 
-from src.shared_types import Grid, Move, Path, Point, MOVE_DELTAS
+from src.shared_types import Grid, Move, MoveStrategy, Path, Point, MOVE_DELTAS
+
+
+def _path_moves_for_strategy(
+    grid: Grid,
+    start: Point,
+    target: Point,
+    move_strategy: MoveStrategy,
+    visit_counts: dict[Point, int],
+) -> list[Move] | None:
+    if move_strategy == "shortest":
+        return shortest_path_moves(grid, start, target)
+    if move_strategy == "least_overlap":
+        return least_overlap_moves(grid, start, target, visit_counts)
+
+    raise ValueError(f"Unknown move strategy: {move_strategy}")
 
 
 def find_start(grid: Grid) -> Point | None:
@@ -56,7 +72,61 @@ def shortest_path_moves(grid: Grid, start: Point, target: Point) -> list[Move] |
     return None
 
 
-def snake_solver(grid: Grid) -> Path:
+def least_overlap_moves(
+    grid: Grid,
+    start: Point,
+    target: Point,
+    visit_counts: dict[Point, int],
+) -> list[Move] | None:
+    if start == target:
+        return []
+
+    rows = len(grid)
+    cols = len(grid[0]) if rows else 0
+
+    ordered_moves: list[Move] = ["u", "d", "l", "r"]
+    queue: list[tuple[int, int, Point]] = [(0, 0, start)]
+    best_costs: dict[Point, tuple[int, int]] = {start: (0, 0)}
+    parents: dict[Point, tuple[Point, Move]] = {}
+
+    while queue:
+        overlap_cost, step_cost, (cx, cy) = heappop(queue)
+        if (overlap_cost, step_cost) != best_costs[(cx, cy)]:
+            continue
+
+        if (cx, cy) == target:
+            path: list[Move] = []
+            node = target
+            while node != start:
+                previous, step = parents[node]
+                path.append(step)
+                node = previous
+            path.reverse()
+            return path
+
+        for move_name in ordered_moves:
+            dx, dy = MOVE_DELTAS[move_name]
+            nx, ny = cx + dx, cy + dy
+
+            if not (0 <= nx < rows and 0 <= ny < cols):
+                continue
+            if grid[nx][ny] == 0:
+                continue
+
+            overlap_increment = 1 if visit_counts.get((nx, ny), 0) > 0 else 0
+            next_cost = (overlap_cost + overlap_increment, step_cost + 1)
+            previous_best = best_costs.get((nx, ny))
+            if previous_best is not None and previous_best <= next_cost:
+                continue
+
+            best_costs[(nx, ny)] = next_cost
+            parents[(nx, ny)] = ((cx, cy), move_name)
+            heappush(queue, (next_cost[0], next_cost[1], (nx, ny)))
+
+    return None
+
+
+def snake_solver(grid: Grid, move_strategy: MoveStrategy = "least_overlap") -> Path:
     if not grid or not grid[0]:
         return {"start": None, "moves": []}
 
@@ -82,11 +152,14 @@ def snake_solver(grid: Grid) -> Path:
 
     current = start
     moves: list[Move] = []
+    visit_counts: dict[Point, int] = {start: 1}
 
     while remaining_targets:
         target = next(iter(remaining_targets))
 
-        path_moves = shortest_path_moves(grid, current, target)
+        path_moves = _path_moves_for_strategy(
+            grid, current, target, move_strategy, visit_counts
+        )
         if path_moves is None:
             remaining_targets.pop(target, None)
             continue
@@ -95,12 +168,13 @@ def snake_solver(grid: Grid) -> Path:
             dx, dy = MOVE_DELTAS[move]
             current = (current[0] + dx, current[1] + dy)
             moves.append(move)
+            visit_counts[current] = visit_counts.get(current, 0) + 1
             remaining_targets.pop(current, None)
 
     return {"start": start, "moves": moves}
 
 
-def spiral_solver(grid: Grid) -> Path:
+def spiral_solver(grid: Grid, move_strategy: MoveStrategy = "least_overlap") -> Path:
     if not grid or not grid[0]:
         return {"start": None, "moves": []}
 
@@ -164,11 +238,14 @@ def spiral_solver(grid: Grid) -> Path:
 
     current = start
     moves: list[Move] = []
+    visit_counts: dict[Point, int] = {start: 1}
 
     while remaining_targets:
         target = next(iter(remaining_targets))
 
-        path_moves = shortest_path_moves(grid, current, target)
+        path_moves = _path_moves_for_strategy(
+            grid, current, target, move_strategy, visit_counts
+        )
         if path_moves is None:
             remaining_targets.pop(target, None)
             continue
@@ -177,6 +254,7 @@ def spiral_solver(grid: Grid) -> Path:
             dx, dy = MOVE_DELTAS[move]
             current = (current[0] + dx, current[1] + dy)
             moves.append(move)
+            visit_counts[current] = visit_counts.get(current, 0) + 1
             remaining_targets.pop(current, None)
 
     return {"start": start, "moves": moves}
