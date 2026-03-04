@@ -7,13 +7,13 @@ Mow The Lawn is a small Python project for generating connected random lawn grid
 - Generate deterministic random grids from a size and seed.
 - Compare two traversal strategies: snake and spiral.
 - Visualize base grids and computed paths.
-- Simulate many grids to build labelled training data (`snake_path`, `spiral_path`).
+- Simulate many grids to build labelled training data (`snake_path`, `spiral_path`, `random_walk_path`).
 
 ## Codebase components
 
 - `main.py`: Entrypoint for running a single grid demo and visualizing solver output.
 - `simulate.py`: Entrypoint for generating labelled CSV data through the `simulate()` function.
-- `classifier.py`: Train/evaluate/classify path strings as snake-like or spiral-like.
+- `classifier.py`: Train/evaluate/classify path strings as snake-like, spiral-like, or random-walk-like.
 - `src/grid.py`: Random grid generation with connectivity-safe cell removals.
 - `src/solvers.py`: Snake/spiral solvers and pathing strategies (`shortest`, `least_overlap`).
 - `src/visualize.py`: Tkinter visualization helpers and path statistics.
@@ -33,7 +33,7 @@ uv sync
 `main.py` calls `main(n, seed)` to:
 
 - Create one deterministic random grid.
-- Solve it with both snake and spiral strategies.
+- Solve it with snake, spiral, and random walk strategies.
 - Print path overlap stats.
 - Attempt to launch Tkinter windows for grid/path visualization.
 
@@ -48,7 +48,7 @@ uv run main.py 12 7
 `simulate.py` calls `simulate()` (CLI entrypoint), which uses `create_labelled_paths(count, size, output_path)` to:
 
 - Generate many deterministic random grids.
-- Solve each grid with snake and spiral strategies.
+- Solve each grid with snake, spiral, and random walk strategies.
 - Save the move sequences as CSV rows.
 
 Run it:
@@ -61,6 +61,7 @@ Output CSV columns:
 
 - `snake_path`
 - `spiral_path`
+- `random_walk_path`
 
 Path strings use only: `u`, `d`, `l`, `r`.
 
