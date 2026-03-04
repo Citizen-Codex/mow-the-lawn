@@ -1,9 +1,10 @@
 import argparse
+import random
 
 import pandas as pd
 
 from src.grid import create_random_grid
-from src.solvers import snake_solver, spiral_solver
+from src.solvers import random_walk_solver, snake_solver, spiral_solver
 
 
 def create_labelled_paths(
@@ -20,11 +21,13 @@ def create_labelled_paths(
         grid = create_random_grid(size, index)
         snake_path = snake_solver(grid)
         spiral_path = spiral_solver(grid)
+        random_walk_path = random_walk_solver(grid, rng=random.Random(index))
 
         rows.append(
             {
                 "snake_path": "".join(snake_path["moves"]),
                 "spiral_path": "".join(spiral_path["moves"]),
+                "random_walk_path": "".join(random_walk_path["moves"]),
             }
         )
 

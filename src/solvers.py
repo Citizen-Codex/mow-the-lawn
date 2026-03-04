@@ -1,3 +1,4 @@
+import random
 from collections import deque
 from heapq import heappop, heappush
 
@@ -256,5 +257,49 @@ def spiral_solver(grid: Grid, move_strategy: MoveStrategy = "least_overlap") -> 
             moves.append(move)
             visit_counts[current] = visit_counts.get(current, 0) + 1
             remaining_targets.pop(current, None)
+
+    return {"start": start, "moves": moves}
+
+
+def random_walk_solver(grid: Grid, rng: random.Random | None = None) -> Path:
+    if not grid or not grid[0]:
+        return {"start": None, "moves": []}
+
+    start = find_start(grid)
+    if start is None:
+        return {"start": None, "moves": []}
+
+    if rng is None:
+        rng = random.Random()
+
+    rows = len(grid)
+    cols = len(grid[0])
+
+    all_mowable = sum(row.count(1) for row in grid)
+    visited: set[Point] = {start}
+    current = start
+    moves: list[Move] = []
+    ordered_moves: list[Move] = ["u", "d", "l", "r"]
+
+    while len(visited) < all_mowable:
+        neighbors: list[tuple[Point, Move]] = []
+        for move_name in ordered_moves:
+            dx, dy = MOVE_DELTAS[move_name]
+            nx, ny = current[0] + dx, current[1] + dy
+            if 0 <= nx < rows and 0 <= ny < cols and grid[nx][ny] == 1:
+                neighbors.append(((nx, ny), move_name))
+
+        if not neighbors:
+            break
+
+        unvisited = [(p, m) for p, m in neighbors if p not in visited]
+        if unvisited:
+            chosen_point, chosen_move = rng.choice(unvisited)
+        else:
+            chosen_point, chosen_move = rng.choice(neighbors)
+
+        moves.append(chosen_move)
+        current = chosen_point
+        visited.add(current)
 
     return {"start": start, "moves": moves}

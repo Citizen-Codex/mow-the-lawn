@@ -1,6 +1,8 @@
 import argparse
+import random
+
 from src.grid import create_random_grid
-from src.solvers import snake_solver, spiral_solver
+from src.solvers import random_walk_solver, snake_solver, spiral_solver
 from src.visualize import path_stats, show_grid_path_tk, show_grid_tk
 
 
@@ -33,6 +35,16 @@ def main(n: int, seed: int):
     )
     if not launched_spiral:
         print("Spiral path visualizer could not start (likely no display environment).")
+
+    random_walk_path = random_walk_solver(demo_grid, rng=random.Random(seed))
+    print(path_stats(random_walk_path))
+    print("Launching random walk path visualizer...")
+
+    launched_random_walk = show_grid_path_tk(
+        demo_grid, random_walk_path, title="Random Walk Path Visualizer"
+    )
+    if not launched_random_walk:
+        print("Random walk path visualizer could not start (likely no display environment).")
 
 
 if __name__ == "__main__":

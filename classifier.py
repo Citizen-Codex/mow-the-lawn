@@ -12,7 +12,8 @@ from sklearn.pipeline import Pipeline
 
 LABEL_SNAKE = "snake"
 LABEL_SPIRAL = "spiral"
-VALID_LABELS = (LABEL_SNAKE, LABEL_SPIRAL)
+LABEL_RANDOM_WALK = "random_walk"
+VALID_LABELS = (LABEL_SNAKE, LABEL_SPIRAL, LABEL_RANDOM_WALK)
 VALID_PATH_RE = re.compile(r"^[udlr]+$")
 
 
@@ -48,20 +49,25 @@ def load_labeled_paths(csv_path: str | Path) -> tuple[list[str], list[str]]:
 
     with file_path.open(newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
-        required_columns = {"snake_path", "spiral_path"}
+        required_columns = {"snake_path", "spiral_path", "random_walk_path"}
         if reader.fieldnames is None or not required_columns.issubset(
             reader.fieldnames
         ):
-            raise ValueError("CSV must include 'snake_path' and 'spiral_path' columns")
+            raise ValueError(
+                "CSV must include 'snake_path', 'spiral_path', and 'random_walk_path' columns"
+            )
 
         for row in reader:
             snake_path = normalize_path(row["snake_path"])
             spiral_path = normalize_path(row["spiral_path"])
+            random_walk_path = normalize_path(row["random_walk_path"])
 
             texts.append(snake_path)
             labels.append(LABEL_SNAKE)
             texts.append(spiral_path)
             labels.append(LABEL_SPIRAL)
+            texts.append(random_walk_path)
+            labels.append(LABEL_RANDOM_WALK)
 
     return texts, labels
 
@@ -131,7 +137,7 @@ def classify_path(model: Pipeline, path: str) -> PredictionResult:
 def _run_eval(csv_path: str | Path) -> None:
     _, eval_result = train_and_evaluate(csv_path)
     print(f"Accuracy: {eval_result.accuracy:.3f}")
-    print("Confusion matrix [snake, spiral]:")
+    print("Confusion matrix [snake, spiral, random_walk]:")
     for row in eval_result.confusion:
         print(row)
     print("Classification report:")
