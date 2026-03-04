@@ -1,5 +1,6 @@
 import argparse
 import csv
+import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -134,6 +135,31 @@ def classify_path(model: Pipeline, path: str) -> PredictionResult:
     return PredictionResult(label=predicted_label, probabilities=probabilities)
 
 
+def export_model(pipeline: Pipeline, output_path: str | Path) -> None:
+    vectorizer: CountVectorizer = pipeline.named_steps["vectorizer"]
+    clf: LogisticRegression = pipeline.named_steps["classifier"]
+
+    payload = {
+        "vocabulary": vectorizer.vocabulary_,
+        "ngram_range": list(vectorizer.ngram_range),
+        "coef": clf.coef_.tolist(),
+        "intercept": clf.intercept_.tolist(),
+        "classes": clf.classes_.tolist(),
+    }
+
+    out = Path(output_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(payload), encoding="utf-8")
+    print(f"Model exported to {out}")
+
+
+def _run_export(csv_path: str | Path, output_path: str | Path) -> None:
+    texts, labels = load_labeled_paths(csv_path)
+    model = build_pipeline()
+    model.fit(texts, labels)
+    export_model(model, output_path)
+
+
 def _run_eval(csv_path: str | Path) -> None:
     _, eval_result = train_and_evaluate(csv_path)
     print(f"Accuracy: {eval_result.accuracy:.3f}")
@@ -174,6 +200,15 @@ def main() -> None:
 
     subparsers.add_parser("eval", help="Train/evaluate on a validation split")
 
+    export_parser = subparsers.add_parser(
+        "export", help="Train on full dataset and export model as JSON"
+    )
+    export_parser.add_argument(
+        "--output",
+        default="data/model.json",
+        help="Output path for the exported model JSON",
+    )
+
     classify_parser = subparsers.add_parser(
         "classify", help="Classify one arbitrary path"
     )
@@ -188,6 +223,10 @@ def main() -> None:
 
     if args.command == "eval":
         _run_eval(dataset)
+        return
+
+    if args.command == "export":
+        _run_export(dataset, args.output)
         return
 
     _run_classify(dataset, args.path)
