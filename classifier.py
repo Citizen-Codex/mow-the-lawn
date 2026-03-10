@@ -4,6 +4,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -16,6 +17,10 @@ LABEL_SPIRAL = "spiral"
 LABEL_RANDOM_WALK = "random_walk"
 VALID_LABELS = (LABEL_SNAKE, LABEL_SPIRAL, LABEL_RANDOM_WALK)
 VALID_PATH_RE = re.compile(r"^[udlr]+$")
+CHAR_TO_DIGIT = {"d": 0, "l": 1, "r": 2, "u": 3}
+SORTED_CHARS = tuple(CHAR_TO_DIGIT)
+EXPORT_ROUND_DECIMALS = 5
+NGRAM_RANGE = (2, 5)
 
 
 @dataclass(frozen=True)
@@ -80,7 +85,7 @@ def build_pipeline(random_state: int = 42) -> Pipeline:
                 "vectorizer",
                 CountVectorizer(
                     analyzer="char",
-                    ngram_range=(2, 6),
+                    ngram_range=NGRAM_RANGE,
                 ),
             ),
             (
@@ -117,7 +122,7 @@ def train_and_evaluate(
     predictions = model.predict(x_test)
     accuracy = accuracy_score(y_test, predictions)
     matrix = confusion_matrix(y_test, predictions, labels=list(VALID_LABELS)).tolist()
-    report = classification_report(y_test, predictions, digits=3)
+    report = str(classification_report(y_test, predictions, digits=3))
 
     return model, EvaluationResult(accuracy=accuracy, confusion=matrix, report=report)
 
@@ -135,16 +140,70 @@ def classify_path(model: Pipeline, path: str) -> PredictionResult:
     return PredictionResult(label=predicted_label, probabilities=probabilities)
 
 
+def inferred_ngram_index(ngram: str, min_n: int, max_n: int) -> int:
+    rank = 0
+
+    for i, ch in enumerate(ngram):
+        prefix_length = i + 1
+        for candidate in SORTED_CHARS:
+            if candidate >= ch:
+                break
+
+            min_total_length = max(min_n, prefix_length)
+            rank += sum(
+                4 ** (length - prefix_length)
+                for length in range(min_total_length, max_n + 1)
+            )
+
+        if prefix_length >= min_n and i < len(ngram) - 1:
+            rank += 1
+
+    return rank
+
+
+def validate_exportable_vocabulary(vectorizer: CountVectorizer) -> None:
+    min_n, max_n = vectorizer.ngram_range
+    vocabulary = vectorizer.vocabulary_
+    if vocabulary is None:
+        raise ValueError("Vectorizer vocabulary is not available")
+
+    indices = sorted(vocabulary.values())
+    expected_indices = list(range(len(vocabulary)))
+    if indices != expected_indices:
+        raise ValueError("Vectorizer vocabulary indices are not dense")
+
+    for ngram, idx in vocabulary.items():
+        if not (min_n <= len(ngram) <= max_n):
+            raise ValueError(f"N-gram length out of range: {ngram}")
+        if any(ch not in CHAR_TO_DIGIT for ch in ngram):
+            raise ValueError(f"Unsupported n-gram characters in vocabulary: {ngram}")
+
+        expected_idx = inferred_ngram_index(ngram, min_n, max_n)
+        if idx != expected_idx:
+            raise ValueError(
+                f"Vocabulary index mismatch for {ngram!r}: expected {
+                    expected_idx
+                }, got {idx}"
+            )
+
+
 def export_model(pipeline: Pipeline, output_path: str | Path) -> None:
     vectorizer: CountVectorizer = pipeline.named_steps["vectorizer"]
     clf: LogisticRegression = pipeline.named_steps["classifier"]
+    validate_exportable_vocabulary(vectorizer)
+    intercept = cast(list[float], clf.intercept_)
 
     payload = {
-        "vocabulary": vectorizer.vocabulary_,
+        "chars": list(SORTED_CHARS),
         "ngram_range": list(vectorizer.ngram_range),
-        "coef": clf.coef_.tolist(),
-        "intercept": clf.intercept_.tolist(),
-        "classes": clf.classes_.tolist(),
+        "coef": [
+            [round(float(value), EXPORT_ROUND_DECIMALS) for value in row]
+            for row in clf.coef_
+        ],
+        "intercept": [
+            round(float(value), EXPORT_ROUND_DECIMALS) for value in intercept
+        ],
+        "classes": [str(value) for value in clf.classes_],
     }
 
     out = Path(output_path)
