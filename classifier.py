@@ -20,7 +20,7 @@ VALID_PATH_RE = re.compile(r"^[udlr]+$")
 CHAR_TO_DIGIT = {"d": 0, "l": 1, "r": 2, "u": 3}
 SORTED_CHARS = tuple(CHAR_TO_DIGIT)
 EXPORT_ROUND_DECIMALS = 5
-NGRAM_RANGE = (2, 5)
+NGRAM_RANGE = (2, 6)
 
 
 @dataclass(frozen=True)
