@@ -1,6 +1,7 @@
 import random
 from collections import deque
 from heapq import heappop, heappush
+from typing import cast
 
 from src.shared_types import Grid, Move, MoveStrategy, Path, Point, MOVE_DELTAS
 
@@ -137,16 +138,27 @@ def snake_solver(grid: Grid, move_strategy: MoveStrategy = "least_overlap") -> P
 
     rows = len(grid)
     cols = len(grid[0])
+    start_row = start[0]
     start_col = start[1]
+    start_down = random.choice((True, False))
 
     targets: list[Point] = []
-    for col in range(start_col, cols):
-        row_range = (
-            range(rows) if (col - start_col) % 2 == 0 else range(rows - 1, -1, -1)
-        )
-        for row in row_range:
-            if grid[row][col] == 1:
-                targets.append((row, col))
+    if start_down:
+        for col in range(start_col, cols):
+            row_range = (
+                range(rows) if (col - start_col) % 2 == 0 else range(rows - 1, -1, -1)
+            )
+            for row in row_range:
+                if grid[row][col] == 1:
+                    targets.append((row, col))
+    else:
+        for row in range(start_row, rows):
+            col_range = (
+                range(cols) if (row - start_row) % 2 == 0 else range(cols - 1, -1, -1)
+            )
+            for col in col_range:
+                if grid[row][col] == 1:
+                    targets.append((row, col))
 
     remaining_targets = dict.fromkeys(targets)
     remaining_targets.pop(start, None)
@@ -189,6 +201,7 @@ def spiral_solver(grid: Grid, move_strategy: MoveStrategy = "least_overlap") -> 
     all_targets: set[Point] = {
         (row, col) for row in range(rows) for col in range(cols) if grid[row][col] == 1
     }
+    start_down = random.choice((True, False))
 
     targets: list[Point] = [start]
     remaining_targets = set(all_targets)
@@ -200,39 +213,74 @@ def spiral_solver(grid: Grid, move_strategy: MoveStrategy = "least_overlap") -> 
         min_col = min(col for _, col in remaining_targets)
         max_col = max(col for _, col in remaining_targets)
 
-        down_targets = sorted(
-            (point for point in remaining_targets if point[1] == min_col),
-            key=lambda point: point[0],
-        )
-        for point in down_targets:
-            targets.append(point)
-            remaining_targets.remove(point)
+        if start_down:
+            down_targets = sorted(
+                (point for point in remaining_targets if point[1] == min_col),
+                key=lambda point: point[0],
+            )
+            for point in down_targets:
+                targets.append(point)
+                remaining_targets.remove(point)
 
-        right_targets = sorted(
-            (point for point in remaining_targets if point[0] == max_row),
-            key=lambda point: point[1],
-        )
-        for point in right_targets:
-            targets.append(point)
-            remaining_targets.remove(point)
+            right_targets = sorted(
+                (point for point in remaining_targets if point[0] == max_row),
+                key=lambda point: point[1],
+            )
+            for point in right_targets:
+                targets.append(point)
+                remaining_targets.remove(point)
 
-        up_targets = sorted(
-            (point for point in remaining_targets if point[1] == max_col),
-            key=lambda point: point[0],
-            reverse=True,
-        )
-        for point in up_targets:
-            targets.append(point)
-            remaining_targets.remove(point)
+            up_targets = sorted(
+                (point for point in remaining_targets if point[1] == max_col),
+                key=lambda point: point[0],
+                reverse=True,
+            )
+            for point in up_targets:
+                targets.append(point)
+                remaining_targets.remove(point)
 
-        left_targets = sorted(
-            (point for point in remaining_targets if point[0] == min_row),
-            key=lambda point: point[1],
-            reverse=True,
-        )
-        for point in left_targets:
-            targets.append(point)
-            remaining_targets.remove(point)
+            left_targets = sorted(
+                (point for point in remaining_targets if point[0] == min_row),
+                key=lambda point: point[1],
+                reverse=True,
+            )
+            for point in left_targets:
+                targets.append(point)
+                remaining_targets.remove(point)
+        else:
+            right_targets = sorted(
+                (point for point in remaining_targets if point[0] == min_row),
+                key=lambda point: point[1],
+            )
+            for point in right_targets:
+                targets.append(point)
+                remaining_targets.remove(point)
+
+            down_targets = sorted(
+                (point for point in remaining_targets if point[1] == max_col),
+                key=lambda point: point[0],
+            )
+            for point in down_targets:
+                targets.append(point)
+                remaining_targets.remove(point)
+
+            left_targets = sorted(
+                (point for point in remaining_targets if point[0] == max_row),
+                key=lambda point: point[1],
+                reverse=True,
+            )
+            for point in left_targets:
+                targets.append(point)
+                remaining_targets.remove(point)
+
+            up_targets = sorted(
+                (point for point in remaining_targets if point[1] == min_col),
+                key=lambda point: point[0],
+                reverse=True,
+            )
+            for point in up_targets:
+                targets.append(point)
+                remaining_targets.remove(point)
 
     remaining_targets = dict.fromkeys(targets)
     remaining_targets.pop(start, None)
@@ -293,10 +341,12 @@ def random_walk_solver(grid: Grid, rng: random.Random | None = None) -> Path:
             break
 
         unvisited = [(p, m) for p, m in neighbors if p not in visited]
+        chosen_point: Point
+        chosen_move: Move
         if unvisited:
-            chosen_point, chosen_move = rng.choice(unvisited)
+            chosen_point, chosen_move = cast(tuple[Point, Move], rng.choice(unvisited))
         else:
-            chosen_point, chosen_move = rng.choice(neighbors)
+            chosen_point, chosen_move = cast(tuple[Point, Move], rng.choice(neighbors))
 
         moves.append(chosen_move)
         current = chosen_point
