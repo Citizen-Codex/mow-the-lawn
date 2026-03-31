@@ -3,6 +3,7 @@ import random
 
 from src.grid import create_random_grid
 from src.solvers import random_walk_solver, snake_solver, spiral_solver
+from src.optimal_solver import optimal_solver
 from src.visualize import path_stats, show_grid_path_tk, show_grid_tk
 
 
@@ -44,7 +45,21 @@ def main(n: int, seed: int):
         demo_grid, random_walk_path, title="Random Walk Path Visualizer"
     )
     if not launched_random_walk:
-        print("Random walk path visualizer could not start (likely no display environment).")
+        print(
+            "Random walk path visualizer could not start (likely no display environment)."
+        )
+
+    optimal_path = optimal_solver(demo_grid)
+    print(path_stats(optimal_path))
+    print("Launching optimal path visualizer...")
+
+    launched_optimal = show_grid_path_tk(
+        demo_grid, optimal_path, title="Optimal Path Visualizer"
+    )
+    if not launched_optimal:
+        print(
+            "Optimal path visualizer could not start (likely no display environment)."
+        )
 
 
 if __name__ == "__main__":

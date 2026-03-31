@@ -128,7 +128,12 @@ def least_overlap_moves(
     return None
 
 
-def snake_solver(grid: Grid, move_strategy: MoveStrategy = "least_overlap") -> Path:
+def snake_solver(
+    grid: Grid,
+    move_strategy: MoveStrategy = "least_overlap",
+    *,
+    start_down: bool | None = None,
+) -> Path:
     if not grid or not grid[0]:
         return {"start": None, "moves": []}
 
@@ -140,7 +145,8 @@ def snake_solver(grid: Grid, move_strategy: MoveStrategy = "least_overlap") -> P
     cols = len(grid[0])
     start_row = start[0]
     start_col = start[1]
-    start_down = random.choice((True, False))
+    if start_down is None:
+        start_down = random.choice((True, False))
 
     targets: list[Point] = []
     if start_down:
@@ -187,7 +193,12 @@ def snake_solver(grid: Grid, move_strategy: MoveStrategy = "least_overlap") -> P
     return {"start": start, "moves": moves}
 
 
-def spiral_solver(grid: Grid, move_strategy: MoveStrategy = "least_overlap") -> Path:
+def spiral_solver(
+    grid: Grid,
+    move_strategy: MoveStrategy = "least_overlap",
+    *,
+    start_down: bool | None = None,
+) -> Path:
     if not grid or not grid[0]:
         return {"start": None, "moves": []}
 
@@ -201,7 +212,8 @@ def spiral_solver(grid: Grid, move_strategy: MoveStrategy = "least_overlap") -> 
     all_targets: set[Point] = {
         (row, col) for row in range(rows) for col in range(cols) if grid[row][col] == 1
     }
-    start_down = random.choice((True, False))
+    if start_down is None:
+        start_down = random.choice((True, False))
 
     targets: list[Point] = [start]
     remaining_targets = set(all_targets)

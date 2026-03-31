@@ -1,11 +1,11 @@
 # Mow The Lawn
 
-Mow The Lawn is a small Python project for generating connected random lawn grids, solving traversal paths with snake and spiral strategies, and visualizing the result. It also includes a simulation pipeline to generate labelled path data for basic classification experiments.
+Mow The Lawn is a small Python project for generating connected random lawn grids, solving traversal paths with heuristic and exact strategies, and visualizing the result. It also includes a simulation pipeline to generate labelled path data for basic classification experiments.
 
 ## Project purpose
 
 - Generate deterministic random grids from a size and seed.
-- Compare two traversal strategies: snake and spiral.
+- Compare heuristic traversal strategies and an exact branch-and-bound solver.
 - Visualize base grids and computed paths.
 - Simulate many grids to build labelled training data (`snake_path`, `spiral_path`, `random_walk_path`).
 
@@ -15,7 +15,8 @@ Mow The Lawn is a small Python project for generating connected random lawn grid
 - `simulate.py`: Entrypoint for generating labelled CSV data through the `simulate()` function.
 - `classifier.py`: Train/evaluate/classify path strings as snake-like, spiral-like, or random-walk-like.
 - `src/grid.py`: Random grid generation with connectivity-safe cell removals.
-- `src/solvers.py`: Snake/spiral solvers and pathing strategies (`shortest`, `least_overlap`).
+- `src/solvers.py`: Snake/spiral/random-walk solvers, pathing strategies (`shortest`, `least_overlap`), and the shared fixed-start/path helpers.
+- `src/optimal_solver.py`: Exact `optimal_solver()` branch-and-bound search for minimum-move full coverage.
 - `src/visualize.py`: Tkinter visualization helpers and path statistics.
 - `src/shared_types.py`: Shared types (`Grid`, `Path`, moves, and deltas).
 - `data/labelled_paths.csv`: Example generated dataset.
@@ -83,3 +84,4 @@ uv run classifier.py classify --path "dddddddddruuuuuuuuurdddddddd"
 
 - Tkinter windows may not open in headless environments; CLI output still runs.
 - Use the same seed to reproduce the same generated grid for a given size.
+- `optimal_solver()` is exact for the fixed start chosen by `find_start()`, but it is still exponential. It is most useful for smaller grids, solver benchmarking, and validating heuristic output.
