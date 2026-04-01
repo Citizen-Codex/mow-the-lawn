@@ -10,13 +10,15 @@ ACTION_ORDER = ("u", "d", "l", "r")
 @dataclass(slots=True)
 class EnvConfig:
     size: int
+    curriculum_min_size: int | None = None
+    curriculum_warmup_episodes: int = 0
+    curriculum_target_size_probability: float = 0.5
+    curriculum_size_bias_power: float = 2.0
     removed_fraction_min: float = 0.18
     removed_fraction_max: float = 0.42
     reward_new_cell: float = 10
-    # reward_revisit: float = -0.02
     reward_revisit: float = -0.2
     reward_revisit_growth: float = 1.25
-    # reward_revisit_max_penalty: float = 0.5
     reward_revisit_max_penalty: float = 2.5
     reward_edge_reuse: float = -0.03
     reward_edge_reuse_growth: float = 1.4
@@ -24,15 +26,14 @@ class EnvConfig:
     reward_loop: float = -0.15
     reward_loop_growth: float = 1.5
     reward_loop_max_penalty: float = 1.0
-    # reward_frontier_progress: float = 0.08
     reward_frontier_progress: float = 0.0
-    # reward_frontier_regress: float = -0.02
     reward_frontier_regress: float = -0.0
     reward_stall_step: float = -0.01
     stall_grace_steps: int = 8
     reward_complete: float = 1000.0
     reward_invalid: float = -1.0
     max_overlaps: int = 2
+    terminate_on_overlap_limit: bool = True
     reward_overlap_limit: float = -20.0
     reward_timeout: float = -5.0
     reward_timeout_uncovered_scale: float = -15.0
@@ -55,8 +56,18 @@ class TrainConfig:
     seed: int = 0
     device: str = "auto"
     auto_tune: bool = True
+    bc_epochs: int = 0
+    bc_grid_count: int = 0
+    bc_batch_size: int = 1024
+    bc_learning_rate: float = 3e-4
+    bc_seed_start: int = 0
+    bc_size_min: int | None = None
+    bc_size_max: int | None = None
+    bc_removed_fraction_min: float | None = None
+    bc_removed_fraction_max: float | None = None
+    final_target_only_timesteps: int = 0
     eval_freq_timesteps: int = 20_000
-    eval_seed_count: int = 10
+    eval_seed_count: int = 50
     save_best_checkpoint: bool = True
 
 
@@ -105,6 +116,9 @@ def _default_n_epochs(rollout_batch: int) -> int:
 
 
 def resolve_train_config(train_config: TrainConfig) -> TrainConfig:
+    if train_config.final_target_only_timesteps < 0:
+        raise ValueError("final_target_only_timesteps must be non-negative")
+
     max_n_steps = max(
         1, math.ceil(train_config.total_timesteps / max(1, train_config.n_envs))
     )

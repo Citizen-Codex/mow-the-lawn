@@ -8,6 +8,7 @@ from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecEnv
 
+from src.grid import create_random_grid
 from src.rl_solver.config import (
     EnvConfig,
     TrainConfig,
@@ -19,6 +20,11 @@ from src.rl_solver.config import (
     save_run_config,
 )
 from src.rl_solver.env import LawnMowingEnv
+from src.rl_solver.expert import (
+    build_optimal_expert_dataset,
+    run_behavior_cloning_pretrain,
+)
+from src.rl_solver.features import LawnMowingFeaturesExtractor
 from src.rl_solver.metrics import (
     SummaryStats,
     path_metrics,
@@ -58,6 +64,17 @@ def build_vec_env(env_config: EnvConfig, train_config: TrainConfig) -> VecEnv:
     return DummyVecEnv(env_fns)
 
 
+def _policy_kwargs() -> dict:
+    return {
+        "features_extractor_class": LawnMowingFeaturesExtractor,
+        "features_extractor_kwargs": {
+            "features_dim": 512,
+            "scalar_hidden_dim": 128,
+        },
+        "net_arch": {"pi": [256, 256], "vf": [256, 256]},
+    }
+
+
 def _rollout_env_with_model(
     model: MaskablePPO,
     env: LawnMowingEnv,
@@ -84,8 +101,10 @@ def solve_grid_with_loaded_model(
     *,
     deterministic: bool = True,
 ) -> Path:
-    if len(grid) != env_config.size:
-        raise ValueError(f"Model expects grid size {env_config.size}, got {len(grid)}")
+    if len(grid) > env_config.size:
+        raise ValueError(
+            f"Model supports grids up to size {env_config.size}, got {len(grid)}"
+        )
 
     env = LawnMowingEnv(env_config)
     obs, _ = env.reset(options={"grid": grid})
@@ -101,10 +120,18 @@ def _evaluate_model_on_seeds(
 ) -> SummaryStats:
     rows: list[dict[str, int | float | bool]] = []
     for seed in seeds:
+        grid = create_random_grid(
+            env_config.size,
+            seed,
+            removed_fraction_range=(
+                env_config.removed_fraction_min,
+                env_config.removed_fraction_max,
+            ),
+        )
         env = LawnMowingEnv(env_config)
-        obs, _ = env.reset(seed=seed)
+        obs, _ = env.reset(options={"grid": grid, "grid_seed": seed})
         path = _rollout_env_with_model(model, env, obs, deterministic=deterministic)
-        rows.append(path_metrics(env.grid, path))
+        rows.append(path_metrics(grid, path))
     return summarize_metric_rows(rows)
 
 
@@ -170,6 +197,46 @@ class CoverageEvalCallback(BaseCallback):
         return True
 
 
+def _run_training_stage(
+    model: MaskablePPO,
+    vec_env: VecEnv,
+    env_config: EnvConfig,
+    train_config: TrainConfig,
+    model_path: str | FilePath,
+    *,
+    total_timesteps: int,
+    reset_num_timesteps: bool,
+    best_score: tuple[float, float, float, float] | None,
+    best_summary: SummaryStats | None,
+    label: str,
+) -> tuple[tuple[float, float, float, float] | None, SummaryStats | None]:
+    if total_timesteps <= 0:
+        return best_score, best_summary
+
+    model.set_env(vec_env)
+    eval_callback = CoverageEvalCallback(
+        env_config=env_config,
+        train_config=train_config,
+        model_path=model_path,
+        best_score=best_score,
+        best_summary=best_summary,
+    )
+    print(
+        "Training stage: "
+        f"{label} "
+        f"timesteps={total_timesteps} "
+        f"grid_size=[{env_config.curriculum_min_size or env_config.size}, "
+        f"{env_config.size}]"
+    )
+    model.learn(
+        total_timesteps=total_timesteps,
+        callback=eval_callback,
+        progress_bar=False,
+        reset_num_timesteps=reset_num_timesteps,
+    )
+    return eval_callback.best_score, eval_callback.best_summary
+
+
 def train_maskable_ppo(
     env_config: EnvConfig,
     train_config: TrainConfig,
@@ -178,7 +245,7 @@ def train_maskable_ppo(
     resume_from: str | FilePath | None = None,
 ) -> FilePath:
     train_config = resolve_train_config(train_config)
-    policy_kwargs = {"net_arch": {"pi": [1024, 1024], "vf": [1024, 1024]}}
+    policy_kwargs = _policy_kwargs()
     if resume_from is not None:
         resume_path = FilePath(resume_from)
         resume_config = load_run_config(resume_path)
@@ -209,20 +276,22 @@ def train_maskable_ppo(
     else:
         model = None
 
-    vec_env = build_vec_env(env_config, train_config)
-    eval_callback = CoverageEvalCallback(
-        env_config=env_config,
-        train_config=train_config,
-        model_path=model_path,
-    )
     print(
         "Training distribution: "
+        f"grid_size=[{env_config.curriculum_min_size or env_config.size}, "
+        f"{env_config.size}] "
+        f"curriculum_warmup={env_config.curriculum_warmup_episodes} "
+        f"target_size_prob={env_config.curriculum_target_size_probability:.2f} "
+        f"size_bias_power={env_config.curriculum_size_bias_power:.2f} "
         f"removed_fraction=[{env_config.removed_fraction_min:.2f}, "
         f"{env_config.removed_fraction_max:.2f}] "
         f"max_overlaps={env_config.max_overlaps} "
+        f"terminate_on_overlap_limit={env_config.terminate_on_overlap_limit} "
+        f"final_target_only_timesteps={min(train_config.total_timesteps, train_config.final_target_only_timesteps)} "
         f"timesteps={train_config.total_timesteps}"
     )
 
+    vec_env = build_vec_env(env_config, train_config)
     if model is None:
         model = MaskablePPO(
             "MultiInputPolicy",
@@ -245,15 +314,69 @@ def train_maskable_ppo(
         model.set_env(vec_env)
         reset_num_timesteps = False
 
-    model.learn(
-        total_timesteps=train_config.total_timesteps,
-        callback=eval_callback,
-        progress_bar=False,
-        reset_num_timesteps=reset_num_timesteps,
+    expert_dataset = build_optimal_expert_dataset(env_config, train_config)
+    if expert_dataset is not None:
+        if expert_dataset.avg_grid_size < env_config.size:
+            print(
+                "Behavior cloning note: "
+                f"avg_expert_grid_size={expert_dataset.avg_grid_size:.1f} "
+                f"model_max_size={env_config.size} "
+                "consider fewer BC epochs or a larger expert library if PPO stalls on large grids"
+            )
+        run_behavior_cloning_pretrain(model, expert_dataset, train_config)
+
+    initial_timesteps = max(
+        0,
+        train_config.total_timesteps
+        - min(train_config.total_timesteps, train_config.final_target_only_timesteps),
     )
-    best_summary = eval_callback.best_summary
-    best_model_path = eval_callback.best_model_path
-    vec_env.close()
+    final_target_only_timesteps = min(
+        train_config.total_timesteps,
+        train_config.final_target_only_timesteps,
+    )
+    best_score: tuple[float, float, float, float] | None = None
+    best_summary: SummaryStats | None = None
+    best_model_path = FilePath(model_path).with_name(
+        f"{FilePath(model_path).stem}.best{FilePath(model_path).suffix}"
+    )
+
+    try:
+        best_score, best_summary = _run_training_stage(
+            model,
+            vec_env,
+            env_config,
+            train_config,
+            model_path,
+            total_timesteps=initial_timesteps,
+            reset_num_timesteps=reset_num_timesteps,
+            best_score=best_score,
+            best_summary=best_summary,
+            label="curriculum/main",
+        )
+
+        if final_target_only_timesteps > 0:
+            vec_env.close()
+            target_only_env_config = replace(
+                env_config,
+                curriculum_min_size=env_config.size,
+                curriculum_warmup_episodes=0,
+                curriculum_target_size_probability=1.0,
+            )
+            vec_env = build_vec_env(target_only_env_config, train_config)
+            best_score, best_summary = _run_training_stage(
+                model,
+                vec_env,
+                target_only_env_config,
+                train_config,
+                model_path,
+                total_timesteps=final_target_only_timesteps,
+                reset_num_timesteps=False,
+                best_score=best_score,
+                best_summary=best_summary,
+                label="target-size-only",
+            )
+    finally:
+        vec_env.close()
 
     if model is None:
         raise RuntimeError("Failed to initialize PPO model")

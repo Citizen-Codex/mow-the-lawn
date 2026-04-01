@@ -23,7 +23,14 @@ def evaluate_model(
     env_config = make_env_config(config["env"])
 
     for seed in seeds:
-        grid = create_random_grid(size, seed)
+        grid = create_random_grid(
+            size,
+            seed,
+            removed_fraction_range=(
+                env_config.removed_fraction_min,
+                env_config.removed_fraction_max,
+            ),
+        )
         results.append(
             rollout_loaded_model_on_grid(
                 model,

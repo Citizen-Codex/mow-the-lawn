@@ -20,8 +20,10 @@ def rollout_loaded_model_on_grid(
     *,
     deterministic: bool = True,
 ) -> RolloutResult:
-    if len(grid) != env_config.size:
-        raise ValueError(f"Model expects grid size {env_config.size}, got {len(grid)}")
+    if len(grid) > env_config.size:
+        raise ValueError(
+            f"Model supports grids up to size {env_config.size}, got {len(grid)}"
+        )
 
     env = LawnMowingEnv(env_config)
     obs, info = env.reset(options={"grid": grid})
@@ -95,11 +97,20 @@ def rollout_model_on_seed(
     model_path: str | Path,
     seed: int,
     *,
+    size: int | None = None,
     deterministic: bool = True,
 ) -> dict[str, Any]:
     config = load_run_config(model_path)
-    size = int(config["env"]["size"])
-    grid = create_random_grid(size, seed)
+    env_config = make_env_config(config["env"])
+    grid_size = int(env_config.size if size is None else size)
+    grid = create_random_grid(
+        grid_size,
+        seed,
+        removed_fraction_range=(
+            env_config.removed_fraction_min,
+            env_config.removed_fraction_max,
+        ),
+    )
     result = rollout_model_on_grid(model_path, grid, deterministic=deterministic)
     result["grid"] = grid
     result["seed"] = seed

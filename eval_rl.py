@@ -6,16 +6,19 @@ from src.rl_solver.metrics import format_summary
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Evaluate an RL solver on generated grids"
+        description="Evaluate an RL solver on generated grids using the model's saved density range"
     )
     parser.add_argument(
         "--model", required=True, help="Path to a saved MaskablePPO model"
     )
     parser.add_argument(
-        "--size", type=int, required=True, help="Grid size used for evaluation"
+        "--size",
+        type=int,
+        required=True,
+        help="Grid size used for evaluation (must not exceed the model max size)",
     )
     parser.add_argument(
-        "--seeds", type=int, default=25, help="Number of evaluation seeds"
+        "--seeds", type=int, default=50, help="Number of evaluation seeds"
     )
     parser.add_argument(
         "--start-seed", type=int, default=0, help="First evaluation seed"

@@ -1,0 +1,751 @@
+{
+  "dataset": "src/optimal/library/optimal_paths.csv",
+  "output_dir": "src/optimal/library/clusters",
+  "row_count": 1000,
+  "clustering_features": {
+    "type": "full_path_tfidf_svd",
+    "ngram_range": [
+      3,
+      8
+    ],
+    "svd_components": 8,
+    "component_names": [
+      "svd_component_0",
+      "svd_component_1",
+      "svd_component_2",
+      "svd_component_3",
+      "svd_component_4",
+      "svd_component_5",
+      "svd_component_6",
+      "svd_component_7"
+    ],
+    "motif_length_for_summary": 5
+  },
+  "cluster_selection": {
+    "mode": "auto",
+    "selected_k": 5,
+    "selected_silhouette": 0.1622,
+    "candidates": [
+      {
+        "n_clusters": 2,
+        "silhouette": 0.1402
+      },
+      {
+        "n_clusters": 3,
+        "silhouette": 0.1457
+      },
+      {
+        "n_clusters": 4,
+        "silhouette": 0.1513
+      },
+      {
+        "n_clusters": 5,
+        "silhouette": 0.1622
+      },
+      {
+        "n_clusters": 6,
+        "silhouette": 0.1517
+      },
+      {
+        "n_clusters": 7,
+        "silhouette": 0.1539
+      },
+      {
+        "n_clusters": 8,
+        "silhouette": 0.1563
+      }
+    ]
+  },
+  "clusters": [
+    {
+      "cluster_id": 0,
+      "size": 341,
+      "share": 0.341,
+      "hint": "motif=uludd, end=(6,0)",
+      "avg_moves": 40.721,
+      "avg_overlaps": 1.748,
+      "avg_open_cells": 39.974,
+      "avg_turn_rate": 0.6105,
+      "avg_run_length": 1.6403,
+      "avg_move_fraction": {
+        "u": 0.218,
+        "d": 0.3105,
+        "l": 0.1956,
+        "r": 0.276
+      },
+      "top_motifs": [
+        {
+          "motif": "uludd",
+          "count": 18,
+          "lift": 2.3239
+        },
+        {
+          "motif": "rrdrd",
+          "count": 25,
+          "lift": 2.2496
+        },
+        {
+          "motif": "drduu",
+          "count": 20,
+          "lift": 2.1996
+        },
+        {
+          "motif": "rdrur",
+          "count": 152,
+          "lift": 2.17
+        },
+        {
+          "motif": "urddl",
+          "count": 46,
+          "lift": 2.1681
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 6,
+          "end_col": 0,
+          "count": 38
+        },
+        {
+          "end_row": 6,
+          "end_col": 6,
+          "count": 30
+        },
+        {
+          "end_row": 0,
+          "end_col": 6,
+          "count": 22
+        },
+        {
+          "end_row": 5,
+          "end_col": 5,
+          "count": 16
+        },
+        {
+          "end_row": 5,
+          "end_col": 0,
+          "count": 14
+        }
+      ],
+      "examples": [
+        {
+          "index": 646,
+          "seed": 646,
+          "image": "images/grid_0646_n7_seed646.svg",
+          "distance_to_centroid": 0.075,
+          "moves": 40,
+          "overlaps": 3,
+          "end": {
+            "row": 5,
+            "col": 3
+          },
+          "path_preview": "drurrrrrdldrddddululurllluudlldd"
+        },
+        {
+          "index": 949,
+          "seed": 949,
+          "image": "images/grid_0949_n7_seed949.svg",
+          "distance_to_centroid": 0.0835,
+          "moves": 42,
+          "overlaps": 5,
+          "end": {
+            "row": 6,
+            "col": 6
+          },
+          "path_preview": "dddddduururuluurddrdruurruddldrd"
+        },
+        {
+          "index": 223,
+          "seed": 223,
+          "image": "images/grid_0223_n7_seed223.svg",
+          "distance_to_centroid": 0.0846,
+          "moves": 40,
+          "overlaps": 1,
+          "end": {
+            "row": 0,
+            "col": 6
+          },
+          "path_preview": "rdrddluludddrdldrrrrurdruullluur"
+        },
+        {
+          "index": 891,
+          "seed": 891,
+          "image": "images/grid_0891_n7_seed891.svg",
+          "distance_to_centroid": 0.0848,
+          "moves": 38,
+          "overlaps": 1,
+          "end": {
+            "row": 5,
+            "col": 5
+          },
+          "path_preview": "drurrrrdllldlldrdlddrurdrruururu"
+        },
+        {
+          "index": 637,
+          "seed": 637,
+          "image": "images/grid_0637_n7_seed637.svg",
+          "distance_to_centroid": 0.0934,
+          "moves": 40,
+          "overlaps": 1,
+          "end": {
+            "row": 6,
+            "col": 0
+          },
+          "path_preview": "ddddruuuurrdrdrdrdddllurulululud"
+        }
+      ]
+    },
+    {
+      "cluster_id": 1,
+      "size": 203,
+      "share": 0.203,
+      "hint": "motif=uurll, end=(0,6)",
+      "avg_moves": 41.34,
+      "avg_overlaps": 1.394,
+      "avg_open_cells": 40.946,
+      "avg_turn_rate": 0.5028,
+      "avg_run_length": 1.9978,
+      "avg_move_fraction": {
+        "u": 0.2296,
+        "d": 0.2685,
+        "l": 0.1992,
+        "r": 0.3026
+      },
+      "top_motifs": [
+        {
+          "motif": "uurll",
+          "count": 11,
+          "lift": 3.3725
+        },
+        {
+          "motif": "ldllu",
+          "count": 35,
+          "lift": 3.0121
+        },
+        {
+          "motif": "dluur",
+          "count": 22,
+          "lift": 2.9167
+        },
+        {
+          "motif": "rruul",
+          "count": 66,
+          "lift": 2.8153
+        },
+        {
+          "motif": "rrrru",
+          "count": 200,
+          "lift": 2.5156
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 0,
+          "end_col": 6,
+          "count": 38
+        },
+        {
+          "end_row": 6,
+          "end_col": 6,
+          "count": 16
+        },
+        {
+          "end_row": 1,
+          "end_col": 6,
+          "count": 16
+        },
+        {
+          "end_row": 0,
+          "end_col": 5,
+          "count": 13
+        },
+        {
+          "end_row": 1,
+          "end_col": 5,
+          "count": 10
+        }
+      ],
+      "examples": [
+        {
+          "index": 76,
+          "seed": 76,
+          "image": "images/grid_0076_n7_seed76.svg",
+          "distance_to_centroid": 0.0679,
+          "moves": 41,
+          "overlaps": 3,
+          "end": {
+            "row": 0,
+            "col": 5
+          },
+          "path_preview": "ddddddrrrrrruululldrdrlllluruuld"
+        },
+        {
+          "index": 379,
+          "seed": 379,
+          "image": "images/grid_0379_n7_seed379.svg",
+          "distance_to_centroid": 0.0861,
+          "moves": 40,
+          "overlaps": 2,
+          "end": {
+            "row": 0,
+            "col": 6
+          },
+          "path_preview": "ddddddrrrrrruuuludldldllurulrrul"
+        },
+        {
+          "index": 923,
+          "seed": 923,
+          "image": "images/grid_0923_n7_seed923.svg",
+          "distance_to_centroid": 0.0869,
+          "moves": 41,
+          "overlaps": 3,
+          "end": {
+            "row": 1,
+            "col": 6
+          },
+          "path_preview": "ddddddrrrrrruuudldluuuddldlluuur"
+        },
+        {
+          "index": 709,
+          "seed": 709,
+          "image": "images/grid_0709_n7_seed709.svg",
+          "distance_to_centroid": 0.087,
+          "moves": 43,
+          "overlaps": 0,
+          "end": {
+            "row": 4,
+            "col": 2
+          },
+          "path_preview": "dddddrrrrrruuldluurulurrulllldrd"
+        },
+        {
+          "index": 477,
+          "seed": 477,
+          "image": "images/grid_0477_n7_seed477.svg",
+          "distance_to_centroid": 0.1,
+          "moves": 42,
+          "overlaps": 1,
+          "end": {
+            "row": 5,
+            "col": 5
+          },
+          "path_preview": "ddddddrrrrrruululuurrullldlulddd"
+        }
+      ]
+    },
+    {
+      "cluster_id": 2,
+      "size": 167,
+      "share": 0.167,
+      "hint": "motif=uluuu, end=(6,6)",
+      "avg_moves": 41.467,
+      "avg_overlaps": 1.234,
+      "avg_open_cells": 41.234,
+      "avg_turn_rate": 0.472,
+      "avg_run_length": 2.1243,
+      "avg_move_fraction": {
+        "u": 0.2554,
+        "d": 0.3444,
+        "l": 0.1428,
+        "r": 0.2574
+      },
+      "top_motifs": [
+        {
+          "motif": "uluuu",
+          "count": 86,
+          "lift": 3.3845
+        },
+        {
+          "motif": "ddrru",
+          "count": 93,
+          "lift": 3.02
+        },
+        {
+          "motif": "ddulu",
+          "count": 8,
+          "lift": 2.9713
+        },
+        {
+          "motif": "ruluu",
+          "count": 91,
+          "lift": 2.939
+        },
+        {
+          "motif": "uuuur",
+          "count": 132,
+          "lift": 2.8629
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 6,
+          "end_col": 6,
+          "count": 31
+        },
+        {
+          "end_row": 0,
+          "end_col": 6,
+          "count": 16
+        },
+        {
+          "end_row": 5,
+          "end_col": 6,
+          "count": 14
+        },
+        {
+          "end_row": 4,
+          "end_col": 6,
+          "count": 11
+        },
+        {
+          "end_row": 6,
+          "end_col": 5,
+          "count": 9
+        }
+      ],
+      "examples": [
+        {
+          "index": 78,
+          "seed": 78,
+          "image": "images/grid_0078_n7_seed78.svg",
+          "distance_to_centroid": 0.0929,
+          "moves": 42,
+          "overlaps": 1,
+          "end": {
+            "row": 5,
+            "col": 5
+          },
+          "path_preview": "ddddddruruluuuurrrrrldldlulddrrd"
+        },
+        {
+          "index": 839,
+          "seed": 839,
+          "image": "images/grid_0839_n7_seed839.svg",
+          "distance_to_centroid": 0.1042,
+          "moves": 42,
+          "overlaps": 0,
+          "end": {
+            "row": 5,
+            "col": 5
+          },
+          "path_preview": "ddddddrurrulluuuurrrdrdllulddrrd"
+        },
+        {
+          "index": 535,
+          "seed": 535,
+          "image": "images/grid_0535_n7_seed535.svg",
+          "distance_to_centroid": 0.1084,
+          "moves": 43,
+          "overlaps": 2,
+          "end": {
+            "row": 4,
+            "col": 5
+          },
+          "path_preview": "ddddddruruluuuurrrrrddlulddlluur"
+        },
+        {
+          "index": 684,
+          "seed": 684,
+          "image": "images/grid_0684_n7_seed684.svg",
+          "distance_to_centroid": 0.115,
+          "moves": 42,
+          "overlaps": 7,
+          "end": {
+            "row": 6,
+            "col": 6
+          },
+          "path_preview": "ddddddrrrrullulduluuuurrrrdddlrr"
+        },
+        {
+          "index": 733,
+          "seed": 733,
+          "image": "images/grid_0733_n7_seed733.svg",
+          "distance_to_centroid": 0.1288,
+          "moves": 39,
+          "overlaps": 2,
+          "end": {
+            "row": 5,
+            "col": 6
+          },
+          "path_preview": "ddddddrrrulluuuurrrurrldlddluldd"
+        }
+      ]
+    },
+    {
+      "cluster_id": 3,
+      "size": 145,
+      "share": 0.145,
+      "hint": "motif=uuull, end=(4,4)",
+      "avg_moves": 41.497,
+      "avg_overlaps": 0.924,
+      "avg_open_cells": 41.572,
+      "avg_turn_rate": 0.4665,
+      "avg_run_length": 2.1415,
+      "avg_move_fraction": {
+        "u": 0.2677,
+        "d": 0.3179,
+        "l": 0.1681,
+        "r": 0.2463
+      },
+      "top_motifs": [
+        {
+          "motif": "uuull",
+          "count": 97,
+          "lift": 3.7907
+        },
+        {
+          "motif": "uuuuu",
+          "count": 251,
+          "lift": 3.6291
+        },
+        {
+          "motif": "uulll",
+          "count": 67,
+          "lift": 3.3692
+        },
+        {
+          "motif": "uuuul",
+          "count": 145,
+          "lift": 3.2945
+        },
+        {
+          "motif": "llldl",
+          "count": 18,
+          "lift": 3.0775
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 4,
+          "end_col": 4,
+          "count": 16
+        },
+        {
+          "end_row": 0,
+          "end_col": 1,
+          "count": 12
+        },
+        {
+          "end_row": 3,
+          "end_col": 5,
+          "count": 12
+        },
+        {
+          "end_row": 5,
+          "end_col": 3,
+          "count": 10
+        },
+        {
+          "end_row": 2,
+          "end_col": 5,
+          "count": 7
+        }
+      ],
+      "examples": [
+        {
+          "index": 326,
+          "seed": 326,
+          "image": "images/grid_0326_n7_seed326.svg",
+          "distance_to_centroid": 0.1091,
+          "moves": 40,
+          "overlaps": 1,
+          "end": {
+            "row": 5,
+            "col": 3
+          },
+          "path_preview": "ddddddrrrrrruuuuullldldlddrururu"
+        },
+        {
+          "index": 140,
+          "seed": 140,
+          "image": "images/grid_0140_n7_seed140.svg",
+          "distance_to_centroid": 0.1167,
+          "moves": 43,
+          "overlaps": 1,
+          "end": {
+            "row": 3,
+            "col": 4
+          },
+          "path_preview": "rdldddddrrurdrrruuuuuullldrrdddd"
+        },
+        {
+          "index": 240,
+          "seed": 240,
+          "image": "images/grid_0240_n7_seed240.svg",
+          "distance_to_centroid": 0.1297,
+          "moves": 41,
+          "overlaps": 0,
+          "end": {
+            "row": 4,
+            "col": 5
+          },
+          "path_preview": "ddrrrrrruuuuuullldldldddruururur"
+        },
+        {
+          "index": 570,
+          "seed": 570,
+          "image": "images/grid_0570_n7_seed570.svg",
+          "distance_to_centroid": 0.1318,
+          "moves": 46,
+          "overlaps": 2,
+          "end": {
+            "row": 1,
+            "col": 5
+          },
+          "path_preview": "druddrdlldddrrrrrruuuuuulldldddd"
+        },
+        {
+          "index": 62,
+          "seed": 62,
+          "image": "images/grid_0062_n7_seed62.svg",
+          "distance_to_centroid": 0.1332,
+          "moves": 41,
+          "overlaps": 0,
+          "end": {
+            "row": 2,
+            "col": 5
+          },
+          "path_preview": "ddruurrdlddddlldrrrrrruuuuulldld"
+        }
+      ]
+    },
+    {
+      "cluster_id": 4,
+      "size": 144,
+      "share": 0.144,
+      "hint": "motif=rrddd, end=(6,0)",
+      "avg_moves": 41.41,
+      "avg_overlaps": 1.167,
+      "avg_open_cells": 41.243,
+      "avg_turn_rate": 0.4738,
+      "avg_run_length": 2.1024,
+      "avg_move_fraction": {
+        "u": 0.2403,
+        "d": 0.3474,
+        "l": 0.1832,
+        "r": 0.2291
+      },
+      "top_motifs": [
+        {
+          "motif": "rrddd",
+          "count": 141,
+          "lift": 3.0896
+        },
+        {
+          "motif": "ddddl",
+          "count": 158,
+          "lift": 3.0378
+        },
+        {
+          "motif": "rrrdd",
+          "count": 133,
+          "lift": 2.9051
+        },
+        {
+          "motif": "ldddl",
+          "count": 39,
+          "lift": 2.7752
+        },
+        {
+          "motif": "dddll",
+          "count": 104,
+          "lift": 2.7399
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 6,
+          "end_col": 0,
+          "count": 34
+        },
+        {
+          "end_row": 6,
+          "end_col": 1,
+          "count": 14
+        },
+        {
+          "end_row": 4,
+          "end_col": 0,
+          "count": 8
+        },
+        {
+          "end_row": 6,
+          "end_col": 3,
+          "count": 8
+        },
+        {
+          "end_row": 5,
+          "end_col": 0,
+          "count": 8
+        }
+      ],
+      "examples": [
+        {
+          "index": 234,
+          "seed": 234,
+          "image": "images/grid_0234_n7_seed234.svg",
+          "distance_to_centroid": 0.1095,
+          "moves": 41,
+          "overlaps": 2,
+          "end": {
+            "row": 5,
+            "col": 0
+          },
+          "path_preview": "dddrurrullurrrrrddddddulluruuuld"
+        },
+        {
+          "index": 723,
+          "seed": 723,
+          "image": "images/grid_0723_n7_seed723.svg",
+          "distance_to_centroid": 0.1144,
+          "moves": 42,
+          "overlaps": 1,
+          "end": {
+            "row": 6,
+            "col": 4
+          },
+          "path_preview": "drurrrrrddddddlululuurrullldddll"
+        },
+        {
+          "index": 199,
+          "seed": 199,
+          "image": "images/grid_0199_n7_seed199.svg",
+          "distance_to_centroid": 0.1202,
+          "moves": 45,
+          "overlaps": 6,
+          "end": {
+            "row": 6,
+            "col": 1
+          },
+          "path_preview": "drdrdruululrrrrrdddddduuluuulddd"
+        },
+        {
+          "index": 108,
+          "seed": 108,
+          "image": "images/grid_0108_n7_seed108.svg",
+          "distance_to_centroid": 0.1214,
+          "moves": 45,
+          "overlaps": 2,
+          "end": {
+            "row": 6,
+            "col": 3
+          },
+          "path_preview": "ddddddruuuruurullrrrrrddddddluul"
+        },
+        {
+          "index": 811,
+          "seed": 811,
+          "image": "images/grid_0811_n7_seed811.svg",
+          "distance_to_centroid": 0.1221,
+          "moves": 43,
+          "overlaps": 4,
+          "end": {
+            "row": 6,
+            "col": 0
+          },
+          "path_preview": "ddduurururrrrddddddluuuuulldlrdr"
+        }
+      ]
+    }
+  ]
+}

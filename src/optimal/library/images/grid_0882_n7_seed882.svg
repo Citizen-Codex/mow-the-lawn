@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="342" height="406" viewBox="0 0 342 406">
+<defs>
+<marker id="arrow" markerWidth="7" markerHeight="7" refX="5.5" refY="2.5" orient="auto" markerUnits="strokeWidth">
+<path d="M0,0 L0,5 L5.5,2.5 z" fill="#0f766e" />
+</marker>
+</defs>
+<rect width="100%" height="100%" fill="#f8fafc" />
+<text x="24" y="18" fill="#0f172a" font-size="14" font-weight="700">Optimal Path 0882 | 7x7 | seed=882</text>
+<rect x="24" y="24" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="66" y="24" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="108" y="24" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="150" y="24" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="192" y="24" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="234" y="24" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="276" y="24" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="24" y="66" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="66" y="66" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="108" y="66" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="150" y="66" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="192" y="66" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="234" y="66" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="276" y="66" width="42" height="42" fill="#334155" stroke="#1e293b" stroke-width="1" />
+<rect x="24" y="108" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="66" y="108" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="108" y="108" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="150" y="108" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="192" y="108" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="234" y="108" width="42" height="42" fill="#334155" stroke="#1e293b" stroke-width="1" />
+<rect x="276" y="108" width="42" height="42" fill="#334155" stroke="#1e293b" stroke-width="1" />
+<rect x="24" y="150" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="66" y="150" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="108" y="150" width="42" height="42" fill="#334155" stroke="#1e293b" stroke-width="1" />
+<rect x="150" y="150" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="192" y="150" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="234" y="150" width="42" height="42" fill="#334155" stroke="#1e293b" stroke-width="1" />
+<rect x="276" y="150" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="24" y="192" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="66" y="192" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="108" y="192" width="42" height="42" fill="#334155" stroke="#1e293b" stroke-width="1" />
+<rect x="150" y="192" width="42" height="42" fill="#334155" stroke="#1e293b" stroke-width="1" />
+<rect x="192" y="192" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="234" y="192" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="276" y="192" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="24" y="234" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="66" y="234" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="108" y="234" width="42" height="42" fill="#334155" stroke="#1e293b" stroke-width="1" />
+<rect x="150" y="234" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="192" y="234" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="234" y="234" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="276" y="234" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="24" y="276" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="66" y="276" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="108" y="276" width="42" height="42" fill="#334155" stroke="#1e293b" stroke-width="1" />
+<rect x="150" y="276" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="192" y="276" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="234" y="276" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<rect x="276" y="276" width="42" height="42" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+<line x1="45.0" y1="45.0" x2="45.0" y2="87.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="45.0" y1="87.0" x2="45.0" y2="129.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="45.0" y1="129.0" x2="45.0" y2="171.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="45.0" y1="171.0" x2="45.0" y2="213.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="45.0" y1="213.0" x2="45.0" y2="255.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="45.0" y1="255.0" x2="45.0" y2="297.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="45.0" y1="297.0" x2="87.0" y2="297.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="87.0" y1="297.0" x2="87.0" y2="255.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="87.0" y1="255.0" x2="87.0" y2="213.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="87.0" y1="213.0" x2="87.0" y2="171.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="87.0" y1="171.0" x2="87.0" y2="129.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="87.0" y1="129.0" x2="129.0" y2="129.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="129.0" y1="129.0" x2="129.0" y2="87.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="129.0" y1="87.0" x2="87.0" y2="87.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="87.0" y1="87.0" x2="87.0" y2="45.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="87.0" y1="45.0" x2="129.0" y2="45.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="129.0" y1="45.0" x2="171.0" y2="45.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="171.0" y1="45.0" x2="213.0" y2="45.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="213.0" y1="45.0" x2="255.0" y2="45.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="255.0" y1="45.0" x2="297.0" y2="45.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="297.0" y1="45.0" x2="255.0" y2="45.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="255.0" y1="45.0" x2="255.0" y2="87.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="255.0" y1="87.0" x2="213.0" y2="87.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="213.0" y1="87.0" x2="171.0" y2="87.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="171.0" y1="87.0" x2="171.0" y2="129.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="171.0" y1="129.0" x2="171.0" y2="171.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="171.0" y1="171.0" x2="213.0" y2="171.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="213.0" y1="171.0" x2="213.0" y2="129.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="213.0" y1="129.0" x2="213.0" y2="171.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="213.0" y1="171.0" x2="213.0" y2="213.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="213.0" y1="213.0" x2="255.0" y2="213.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="255.0" y1="213.0" x2="255.0" y2="255.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="255.0" y1="255.0" x2="213.0" y2="255.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="213.0" y1="255.0" x2="171.0" y2="255.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="171.0" y1="255.0" x2="171.0" y2="297.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="171.0" y1="297.0" x2="213.0" y2="297.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="213.0" y1="297.0" x2="255.0" y2="297.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="255.0" y1="297.0" x2="297.0" y2="297.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="297.0" y1="297.0" x2="297.0" y2="255.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="297.0" y1="255.0" x2="297.0" y2="213.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<line x1="297.0" y1="213.0" x2="297.0" y2="171.0" stroke="#0f766e" stroke-width="3" marker-end="url(#arrow)" />
+<circle cx="255.0" cy="45.0" r="7.56" fill="#fb7185" stroke="#be123c" stroke-width="1" />
+<text x="255.0" y="48.0" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="700">2</text>
+<circle cx="213.0" cy="171.0" r="7.56" fill="#fb7185" stroke="#be123c" stroke-width="1" />
+<text x="213.0" y="174.0" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="700">2</text>
+<rect x="29" y="29" width="32" height="32" fill="none" stroke="#16a34a" stroke-width="3" />
+<text x="36" y="39" fill="#15803d" font-size="10" font-weight="700">S</text>
+<rect x="281" y="155" width="32" height="32" fill="none" stroke="#dc2626" stroke-width="3" />
+<text x="288" y="165" fill="#b91c1c" font-size="10" font-weight="700">E</text>
+<text x="24" y="342" fill="#334155" font-size="12">Moves: 41 | Overlaps: 2 | Open cells: 40</text>
+</svg>

@@ -21,6 +21,23 @@ class LawnMowingEnv(gym.Env[dict[str, np.ndarray], int]):
         super().__init__()
         if config.size <= 0:
             raise ValueError("size must be positive")
+        min_size = config.curriculum_min_size or config.size
+        if min_size <= 0 or min_size > config.size:
+            raise ValueError("curriculum_min_size must be between 1 and size")
+        if config.curriculum_warmup_episodes < 0:
+            raise ValueError("curriculum_warmup_episodes must be non-negative")
+        if not 0.0 <= config.curriculum_target_size_probability <= 1.0:
+            raise ValueError(
+                "curriculum_target_size_probability must be between 0 and 1"
+            )
+        if config.curriculum_size_bias_power < 0.0:
+            raise ValueError("curriculum_size_bias_power must be non-negative")
+        if not 0.0 <= config.removed_fraction_min <= config.removed_fraction_max < 1.0:
+            raise ValueError("removed_fraction range must satisfy 0 <= min <= max < 1")
+        if config.max_overlaps < 0:
+            raise ValueError("max_overlaps must be non-negative")
+        if config.max_steps_factor <= 0.0:
+            raise ValueError("max_steps_factor must be positive")
 
         self.config = config
         self.action_space = spaces.Discrete(len(ACTION_ORDER))
@@ -45,6 +62,7 @@ class LawnMowingEnv(gym.Env[dict[str, np.ndarray], int]):
         )
 
         self.grid: Grid = []
+        self.active_size = config.size
         self.grid_seed = config.base_seed
         self.start: Point | None = None
         self.position: Point | None = None
@@ -63,6 +81,7 @@ class LawnMowingEnv(gym.Env[dict[str, np.ndarray], int]):
         self.position_history: deque[Point] = deque(maxlen=5)
         self.edge_traversal_counts: dict[tuple[Point, Point], int] = {}
         self.edge_reuse_count = 0
+        self.generated_episode_count = 0
 
     def reset(
         self,
@@ -75,21 +94,24 @@ class LawnMowingEnv(gym.Env[dict[str, np.ndarray], int]):
 
         provided_grid = options.get("grid")
         if provided_grid is not None:
-            self.grid = [list(row) for row in provided_grid]
+            self.grid = self._normalize_grid(provided_grid)
+            self.active_size = len(self.grid)
             self.grid_seed = int(options.get("grid_seed", self.config.base_seed))
         else:
+            self.active_size = self._sample_grid_size()
             if seed is not None:
                 self.grid_seed = int(seed)
             else:
                 self.grid_seed = int(self.np_random.integers(0, 2**31 - 1))
             self.grid = create_random_grid(
-                self.config.size,
+                self.active_size,
                 self.grid_seed,
                 removed_fraction_range=(
                     self.config.removed_fraction_min,
                     self.config.removed_fraction_max,
                 ),
             )
+            self.generated_episode_count += 1
 
         self.start = find_start(self.grid)
         self.position = self.start
@@ -171,6 +193,9 @@ class LawnMowingEnv(gym.Env[dict[str, np.ndarray], int]):
                 )
                 reward -= self._get_revisit_penalty(prior_visits)
                 self.steps_since_last_new_cell += 1
+                if cell_overlap_count > self.config.max_overlaps:
+                    overlap_limit_hit = True
+                    reward += self.config.reward_overlap_limit
             else:
                 self.visited_mask[next_row, next_col] = 1
                 self.covered_cell_count += 1
@@ -188,6 +213,8 @@ class LawnMowingEnv(gym.Env[dict[str, np.ndarray], int]):
                 frontier_distance_after,
             )
             reward += self._get_stall_penalty()
+            if overlap_limit_hit and self.config.terminate_on_overlap_limit:
+                terminated = True
         else:
             invalid_action = True
             reward += self.config.reward_invalid
@@ -199,10 +226,8 @@ class LawnMowingEnv(gym.Env[dict[str, np.ndarray], int]):
         if self.covered_cell_count >= self.open_cell_count and self.open_cell_count > 0:
             reward += self.config.reward_complete
             terminated = True
-        elif self.max_cell_overlap_count > self.config.max_overlaps:
-            reward += self.config.reward_overlap_limit
-            terminated = True
-            overlap_limit_hit = True
+        elif terminated:
+            pass
         elif self.steps_taken >= self.max_steps:
             reward += self._get_timeout_penalty()
             truncated = True
@@ -238,7 +263,12 @@ class LawnMowingEnv(gym.Env[dict[str, np.ndarray], int]):
         return {"start": self.start, "moves": list(self.moves)}
 
     def _get_obs(self) -> dict[str, np.ndarray]:
-        open_cells = np.asarray(self.grid, dtype=np.int8)
+        open_cells = np.zeros((self.config.size, self.config.size), dtype=np.int8)
+        if self.active_size > 0:
+            open_cells[: self.active_size, : self.active_size] = np.asarray(
+                self.grid,
+                dtype=np.int8,
+            )
         agent_position = np.zeros_like(open_cells)
         previous_position = np.zeros_like(open_cells)
         if self.position is not None:
@@ -286,6 +316,7 @@ class LawnMowingEnv(gym.Env[dict[str, np.ndarray], int]):
     ) -> dict[str, Any]:
         return {
             "grid_seed": self.grid_seed,
+            "grid_size": self.active_size,
             "covered_cells": self.covered_cell_count,
             "open_cells": self.open_cell_count,
             "coverage_ratio": self._coverage_ratio(),
@@ -431,8 +462,59 @@ class LawnMowingEnv(gym.Env[dict[str, np.ndarray], int]):
         return (start, end) if start <= end else (end, start)
 
     def _is_valid_cell(self, row: int, col: int) -> bool:
-        size = len(self.grid)
+        size = self.active_size
         return 0 <= row < size and 0 <= col < size and self.grid[row][col] == 1
+
+    def _normalize_grid(self, grid: Grid) -> Grid:
+        if not grid or not grid[0]:
+            return []
+
+        size = len(grid)
+        if size > self.config.size:
+            raise ValueError(
+                f"Grid size {size} exceeds padded observation size {self.config.size}"
+            )
+        if any(len(row) != size for row in grid):
+            raise ValueError("Grid must be square")
+        return [list(row) for row in grid]
+
+    def _sample_grid_size(self) -> int:
+        min_size = self.config.curriculum_min_size or self.config.size
+        if min_size >= self.config.size:
+            return self.config.size
+        if self.config.curriculum_warmup_episodes <= 0:
+            return self._sample_biased_grid_size(min_size, self.config.size)
+
+        progress = min(
+            1.0,
+            self.generated_episode_count / self.config.curriculum_warmup_episodes,
+        )
+        size_span = self.config.size - min_size
+        current_max_size = min_size + math.floor(size_span * progress)
+        current_max_size = max(min_size, min(current_max_size, self.config.size))
+        return self._sample_biased_grid_size(min_size, current_max_size)
+
+    def _sample_biased_grid_size(self, min_size: int, max_size: int) -> int:
+        if min_size >= max_size:
+            return max_size
+
+        if (
+            max_size == self.config.size
+            and self.config.curriculum_target_size_probability > 0.0
+            and self.np_random.random() < self.config.curriculum_target_size_probability
+        ):
+            return self.config.size
+
+        size_choices = np.arange(min_size, max_size + 1, dtype=np.int32)
+        if max_size == self.config.size and size_choices.size > 1:
+            size_choices = size_choices[:-1]
+        if size_choices.size == 1:
+            return int(size_choices[0])
+
+        ranks = np.arange(1, size_choices.size + 1, dtype=np.float64)
+        weights = ranks**self.config.curriculum_size_bias_power
+        weights /= weights.sum()
+        return int(self.np_random.choice(size_choices, p=weights))
 
     def _distance_to_nearest_unvisited(self, start: Point | None) -> int | None:
         if start is None:
