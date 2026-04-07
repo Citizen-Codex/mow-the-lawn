@@ -1,0 +1,380 @@
+{
+  "dataset": "src/optimal/library/optimal_paths.csv",
+  "size": 14,
+  "asset_root": "src/optimal/library",
+  "output_dir": "src/optimal/library/tmp_size_split/size_14",
+  "row_count": 14,
+  "source_counts": {
+    "human": 14
+  },
+  "clustering_strategy": {
+    "embedding": "visit_order_svd",
+    "algorithm": "kmeans",
+    "selected_k": 4,
+    "silhouette": 0.2653,
+    "davies_bouldin": 0.8761
+  },
+  "clustering_features": {
+    "type": "visit_order_svd",
+    "feature_blocks": [
+      "first_visit_order",
+      "revisit_count",
+      "blocked_mask"
+    ],
+    "svd_components": 8,
+    "component_names": [
+      "visit_component_0",
+      "visit_component_1",
+      "visit_component_2",
+      "visit_component_3",
+      "visit_component_4",
+      "visit_component_5",
+      "visit_component_6",
+      "visit_component_7"
+    ],
+    "motif_length_for_summary": 5
+  },
+  "strategy_candidates": [
+    {
+      "embedding": "visit_order_svd",
+      "algorithm": "kmeans",
+      "n_clusters": 4,
+      "silhouette": 0.2653,
+      "davies_bouldin": 0.8761
+    }
+  ],
+  "clusters": [
+    {
+      "cluster_id": 0,
+      "size": 8,
+      "share": 0.5714,
+      "hint": "motif=udddl, end=(7,13)",
+      "avg_moves": 175.625,
+      "avg_overlaps": 16.625,
+      "avg_open_cells": 160.0,
+      "avg_turn_rate": 0.4225,
+      "avg_run_length": 2.45,
+      "avg_move_fraction": {
+        "u": 0.1757,
+        "d": 0.2035,
+        "l": 0.2776,
+        "r": 0.3433
+      },
+      "source_counts": {
+        "human": 8
+      },
+      "top_motifs": [
+        {
+          "motif": "udddl",
+          "count": 8,
+          "lift": 1.5959
+        },
+        {
+          "motif": "uuuud",
+          "count": 8,
+          "lift": 1.4363
+        },
+        {
+          "motif": "rrruu",
+          "count": 8,
+          "lift": 1.4363
+        },
+        {
+          "motif": "urddr",
+          "count": 9,
+          "lift": 1.3465
+        },
+        {
+          "motif": "ldrrd",
+          "count": 9,
+          "lift": 1.3465
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 7,
+          "end_col": 13,
+          "count": 4
+        },
+        {
+          "end_row": 0,
+          "end_col": 6,
+          "count": 1
+        },
+        {
+          "end_row": 1,
+          "end_col": 12,
+          "count": 1
+        },
+        {
+          "end_row": 2,
+          "end_col": 11,
+          "count": 1
+        },
+        {
+          "end_row": 8,
+          "end_col": 11,
+          "count": 1
+        }
+      ],
+      "examples": [
+        {
+          "index": 49,
+          "source": "human",
+          "source_id": "human-49",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0049.svg",
+          "distance_to_centroid": 5.6572,
+          "moves": 170,
+          "overlaps": 11,
+          "end": {
+            "row": 7,
+            "col": 13
+          },
+          "path_preview": "rrrrrrlldlllldrrrrrdllllldrrrrrd",
+          "user": "z7xngq",
+          "config_label": "config 3"
+        },
+        {
+          "index": 42,
+          "source": "human",
+          "source_id": "human-42",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0042.svg",
+          "distance_to_centroid": 6.0482,
+          "moves": 173,
+          "overlaps": 14,
+          "end": {
+            "row": 2,
+            "col": 11
+          },
+          "path_preview": "rrrrrrlldlllldddddrrdrrdddlllldd",
+          "user": "zizsmx",
+          "config_label": "config 3"
+        }
+      ]
+    },
+    {
+      "cluster_id": 1,
+      "size": 3,
+      "share": 0.2143,
+      "hint": "motif=uuuuu, end=(9,13)",
+      "avg_moves": 187.333,
+      "avg_overlaps": 28.333,
+      "avg_open_cells": 160.0,
+      "avg_turn_rate": 0.4139,
+      "avg_run_length": 2.4614,
+      "avg_move_fraction": {
+        "u": 0.2675,
+        "d": 0.3158,
+        "l": 0.1735,
+        "r": 0.2432
+      },
+      "source_counts": {
+        "human": 3
+      },
+      "top_motifs": [
+        {
+          "motif": "uuuuu",
+          "count": 46,
+          "lift": 3.3252
+        },
+        {
+          "motif": "druuu",
+          "count": 10,
+          "lift": 2.6364
+        },
+        {
+          "motif": "dddru",
+          "count": 9,
+          "lift": 2.521
+        },
+        {
+          "motif": "ddddd",
+          "count": 47,
+          "lift": 2.4212
+        },
+        {
+          "motif": "ruuuu",
+          "count": 11,
+          "lift": 2.1435
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 9,
+          "end_col": 13,
+          "count": 3
+        }
+      ],
+      "examples": [
+        {
+          "index": 71,
+          "source": "human",
+          "source_id": "human-71",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0071.svg",
+          "distance_to_centroid": 6.3747,
+          "moves": 180,
+          "overlaps": 21,
+          "end": {
+            "row": 9,
+            "col": 13
+          },
+          "path_preview": "rrrrrrlldlllldrrrrrdllllldrrrrdl",
+          "user": "pd8p8o",
+          "config_label": "config 3"
+        },
+        {
+          "index": 29,
+          "source": "human",
+          "source_id": "human-29",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0029.svg",
+          "distance_to_centroid": 8.0662,
+          "moves": 176,
+          "overlaps": 17,
+          "end": {
+            "row": 9,
+            "col": 13
+          },
+          "path_preview": "rrrrrrlldlllldrrrrrdllllldddruur",
+          "user": "02w4ix",
+          "config_label": "config 3"
+        }
+      ]
+    },
+    {
+      "cluster_id": 2,
+      "size": 2,
+      "share": 0.1429,
+      "hint": "motif=lllll, end=(5,1)",
+      "avg_moves": 179.5,
+      "avg_overlaps": 20.5,
+      "avg_open_cells": 160.0,
+      "avg_turn_rate": 0.3783,
+      "avg_run_length": 2.6208,
+      "avg_move_fraction": {
+        "u": 0.1862,
+        "d": 0.2169,
+        "l": 0.2872,
+        "r": 0.3097
+      },
+      "source_counts": {
+        "human": 2
+      },
+      "top_motifs": [
+        {
+          "motif": "lllll",
+          "count": 30,
+          "lift": 2.1498
+        },
+        {
+          "motif": "urrrr",
+          "count": 8,
+          "lift": 1.9373
+        },
+        {
+          "motif": "rrrrr",
+          "count": 26,
+          "lift": 1.3938
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 5,
+          "end_col": 1,
+          "count": 1
+        },
+        {
+          "end_row": 6,
+          "end_col": 7,
+          "count": 1
+        }
+      ],
+      "examples": [
+        {
+          "index": 22,
+          "source": "human",
+          "source_id": "human-22",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0022.svg",
+          "distance_to_centroid": 9.6733,
+          "moves": 182,
+          "overlaps": 23,
+          "end": {
+            "row": 5,
+            "col": 1
+          },
+          "path_preview": "rrrrrrllddrdrruruurrrrrddddddduu",
+          "user": "z4siol",
+          "config_label": "config 3"
+        },
+        {
+          "index": 50,
+          "source": "human",
+          "source_id": "human-50",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0050.svg",
+          "distance_to_centroid": 9.6733,
+          "moves": 177,
+          "overlaps": 18,
+          "end": {
+            "row": 6,
+            "col": 7
+          },
+          "path_preview": "rrrrrrlldlllldddddruuuurrrrdllld",
+          "user": "rxswju",
+          "config_label": "config 3"
+        }
+      ]
+    },
+    {
+      "cluster_id": 3,
+      "size": 1,
+      "share": 0.0714,
+      "hint": "motif=, end=(1,4)",
+      "avg_moves": 195.0,
+      "avg_overlaps": 36.0,
+      "avg_open_cells": 160.0,
+      "avg_turn_rate": 0.4485,
+      "avg_run_length": 2.2159,
+      "avg_move_fraction": {
+        "u": 0.2256,
+        "d": 0.2308,
+        "l": 0.2615,
+        "r": 0.2821
+      },
+      "source_counts": {
+        "human": 1
+      },
+      "top_motifs": [],
+      "top_end_positions": [
+        {
+          "end_row": 1,
+          "end_col": 4,
+          "count": 1
+        }
+      ],
+      "examples": [
+        {
+          "index": 38,
+          "source": "human",
+          "source_id": "human-38",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0038.svg",
+          "distance_to_centroid": 0.0,
+          "moves": 195,
+          "overlaps": 36,
+          "end": {
+            "row": 1,
+            "col": 4
+          },
+          "path_preview": "rdldddddrrdrrddddddlllluuurrrddl",
+          "user": "nr2iov",
+          "config_label": "config 3"
+        }
+      ]
+    }
+  ]
+}

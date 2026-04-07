@@ -1,0 +1,474 @@
+{
+  "dataset": "src/optimal/library/optimal_paths.csv",
+  "size": 7,
+  "asset_root": "src/optimal/library",
+  "output_dir": "src/optimal/library/tmp_size_split/size_7",
+  "row_count": 1029,
+  "source_counts": {
+    "optimal": 1000,
+    "human": 29
+  },
+  "clustering_strategy": {
+    "embedding": "visit_order_svd",
+    "algorithm": "kmeans",
+    "selected_k": 4,
+    "silhouette": 0.1243,
+    "davies_bouldin": 2.0972
+  },
+  "clustering_features": {
+    "type": "visit_order_svd",
+    "feature_blocks": [
+      "first_visit_order",
+      "revisit_count",
+      "blocked_mask"
+    ],
+    "svd_components": 8,
+    "component_names": [
+      "visit_component_0",
+      "visit_component_1",
+      "visit_component_2",
+      "visit_component_3",
+      "visit_component_4",
+      "visit_component_5",
+      "visit_component_6",
+      "visit_component_7"
+    ],
+    "motif_length_for_summary": 5
+  },
+  "strategy_candidates": [
+    {
+      "embedding": "visit_order_svd",
+      "algorithm": "kmeans",
+      "n_clusters": 4,
+      "silhouette": 0.1243,
+      "davies_bouldin": 2.0972
+    }
+  ],
+  "clusters": [
+    {
+      "cluster_id": 0,
+      "size": 308,
+      "share": 0.2993,
+      "hint": "motif=rrrlu, end=(0,6)",
+      "avg_moves": 41.39,
+      "avg_overlaps": 1.218,
+      "avg_open_cells": 41.172,
+      "avg_turn_rate": 0.489,
+      "avg_run_length": 2.0605,
+      "avg_move_fraction": {
+        "u": 0.2369,
+        "d": 0.3067,
+        "l": 0.1755,
+        "r": 0.2809
+      },
+      "source_counts": {
+        "optimal": 308
+      },
+      "top_motifs": [
+        {
+          "motif": "rrrlu",
+          "count": 18,
+          "lift": 2.2184
+        },
+        {
+          "motif": "rrrll",
+          "count": 15,
+          "lift": 2.0797
+        },
+        {
+          "motif": "rrrrl",
+          "count": 32,
+          "lift": 1.9719
+        },
+        {
+          "motif": "dluur",
+          "count": 21,
+          "lift": 1.8886
+        },
+        {
+          "motif": "ulluu",
+          "count": 37,
+          "lift": 1.7341
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 0,
+          "end_col": 6,
+          "count": 41
+        },
+        {
+          "end_row": 6,
+          "end_col": 6,
+          "count": 40
+        },
+        {
+          "end_row": 5,
+          "end_col": 6,
+          "count": 17
+        },
+        {
+          "end_row": 1,
+          "end_col": 6,
+          "count": 13
+        },
+        {
+          "end_row": 0,
+          "end_col": 5,
+          "count": 13
+        }
+      ],
+      "examples": [
+        {
+          "index": 507,
+          "source": "optimal",
+          "source_id": "optimal-507",
+          "seed": 507,
+          "image": "images/grid_0507_n7_seed507.svg",
+          "distance_to_centroid": 2.4707,
+          "moves": 43,
+          "overlaps": 1,
+          "end": {
+            "row": 5,
+            "col": 6
+          },
+          "path_preview": "ddddddrrrrullluuuuurrrrrddullddl"
+        },
+        {
+          "index": 571,
+          "source": "optimal",
+          "source_id": "optimal-571",
+          "seed": 571,
+          "image": "images/grid_0571_n7_seed571.svg",
+          "distance_to_centroid": 2.6545,
+          "moves": 42,
+          "overlaps": 0,
+          "end": {
+            "row": 6,
+            "col": 6
+          },
+          "path_preview": "ddddddrrrrullluuuuurdrurdrurddld"
+        }
+      ]
+    },
+    {
+      "cluster_id": 1,
+      "size": 271,
+      "share": 0.2634,
+      "hint": "motif=ddddu, end=(6,0)",
+      "avg_moves": 41.244,
+      "avg_overlaps": 1.531,
+      "avg_open_cells": 40.712,
+      "avg_turn_rate": 0.5346,
+      "avg_run_length": 1.8902,
+      "avg_move_fraction": {
+        "u": 0.2342,
+        "d": 0.3314,
+        "l": 0.1797,
+        "r": 0.2546
+      },
+      "source_counts": {
+        "optimal": 271
+      },
+      "top_motifs": [
+        {
+          "motif": "ddddu",
+          "count": 49,
+          "lift": 2.4161
+        },
+        {
+          "motif": "dddur",
+          "count": 21,
+          "lift": 2.4161
+        },
+        {
+          "motif": "urrul",
+          "count": 29,
+          "lift": 2.1174
+        },
+        {
+          "motif": "ullur",
+          "count": 23,
+          "lift": 2.0791
+        },
+        {
+          "motif": "ddduu",
+          "count": 23,
+          "lift": 2.0791
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 6,
+          "end_col": 0,
+          "count": 32
+        },
+        {
+          "end_row": 6,
+          "end_col": 1,
+          "count": 19
+        },
+        {
+          "end_row": 6,
+          "end_col": 6,
+          "count": 14
+        },
+        {
+          "end_row": 6,
+          "end_col": 3,
+          "count": 13
+        },
+        {
+          "end_row": 5,
+          "end_col": 1,
+          "count": 12
+        }
+      ],
+      "examples": [
+        {
+          "index": 42,
+          "source": "optimal",
+          "source_id": "optimal-42",
+          "seed": 42,
+          "image": "images/grid_0042_n7_seed42.svg",
+          "distance_to_centroid": 2.7452,
+          "moves": 44,
+          "overlaps": 1,
+          "end": {
+            "row": 3,
+            "col": 5
+          },
+          "path_preview": "ddddddruurulurulurrdrurrdldldddl"
+        },
+        {
+          "index": 885,
+          "source": "optimal",
+          "source_id": "optimal-885",
+          "seed": 885,
+          "image": "images/grid_0885_n7_seed885.svg",
+          "distance_to_centroid": 2.8186,
+          "moves": 43,
+          "overlaps": 1,
+          "end": {
+            "row": 6,
+            "col": 1
+          },
+          "path_preview": "ddruurrrrrddddddluldluulrrulurru"
+        }
+      ]
+    },
+    {
+      "cluster_id": 2,
+      "size": 253,
+      "share": 0.2459,
+      "hint": "motif=durrd, end=(6,0)",
+      "avg_moves": 40.834,
+      "avg_overlaps": 1.53,
+      "avg_open_cells": 40.304,
+      "avg_turn_rate": 0.5582,
+      "avg_run_length": 1.824,
+      "avg_move_fraction": {
+        "u": 0.2312,
+        "d": 0.306,
+        "l": 0.1974,
+        "r": 0.2653
+      },
+      "source_counts": {
+        "optimal": 253
+      },
+      "top_motifs": [
+        {
+          "motif": "durrd",
+          "count": 16,
+          "lift": 3.133
+        },
+        {
+          "motif": "dlddl",
+          "count": 20,
+          "lift": 2.1087
+        },
+        {
+          "motif": "drddl",
+          "count": 44,
+          "lift": 2.0796
+        },
+        {
+          "motif": "ddlll",
+          "count": 94,
+          "lift": 2.0781
+        },
+        {
+          "motif": "llllu",
+          "count": 70,
+          "lift": 1.9851
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 6,
+          "end_col": 0,
+          "count": 28
+        },
+        {
+          "end_row": 0,
+          "end_col": 1,
+          "count": 15
+        },
+        {
+          "end_row": 5,
+          "end_col": 0,
+          "count": 15
+        },
+        {
+          "end_row": 0,
+          "end_col": 6,
+          "count": 14
+        },
+        {
+          "end_row": 4,
+          "end_col": 0,
+          "count": 14
+        }
+      ],
+      "examples": [
+        {
+          "index": 88,
+          "source": "optimal",
+          "source_id": "optimal-88",
+          "seed": 88,
+          "image": "images/grid_0088_n7_seed88.svg",
+          "distance_to_centroid": 2.417,
+          "moves": 44,
+          "overlaps": 0,
+          "end": {
+            "row": 2,
+            "col": 0
+          },
+          "path_preview": "rrddddldrruuuuurrrddddddluuuuuld"
+        },
+        {
+          "index": 752,
+          "source": "optimal",
+          "source_id": "optimal-752",
+          "seed": 752,
+          "image": "images/grid_0752_n7_seed752.svg",
+          "distance_to_centroid": 2.4295,
+          "moves": 42,
+          "overlaps": 0,
+          "end": {
+            "row": 4,
+            "col": 4
+          },
+          "path_preview": "ddruurdrurrrddddddlllllluurdrruu"
+        }
+      ]
+    },
+    {
+      "cluster_id": 3,
+      "size": 197,
+      "share": 0.1914,
+      "hint": "motif=dlrdd, end=(0,6)",
+      "avg_moves": 41.523,
+      "avg_overlaps": 1.685,
+      "avg_open_cells": 40.838,
+      "avg_turn_rate": 0.528,
+      "avg_run_length": 1.9188,
+      "avg_move_fraction": {
+        "u": 0.2497,
+        "d": 0.3143,
+        "l": 0.1726,
+        "r": 0.2634
+      },
+      "source_counts": {
+        "optimal": 168,
+        "human": 29
+      },
+      "top_motifs": [
+        {
+          "motif": "dlrdd",
+          "count": 9,
+          "lift": 2.916
+        },
+        {
+          "motif": "lrddd",
+          "count": 10,
+          "lift": 2.88
+        },
+        {
+          "motif": "rdlrd",
+          "count": 9,
+          "lift": 2.7445
+        },
+        {
+          "motif": "rlddd",
+          "count": 15,
+          "lift": 2.6814
+        },
+        {
+          "motif": "rrdlr",
+          "count": 9,
+          "lift": 2.592
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 0,
+          "end_col": 6,
+          "count": 19
+        },
+        {
+          "end_row": 6,
+          "end_col": 6,
+          "count": 16
+        },
+        {
+          "end_row": 4,
+          "end_col": 4,
+          "count": 11
+        },
+        {
+          "end_row": 6,
+          "end_col": 0,
+          "count": 11
+        },
+        {
+          "end_row": 1,
+          "end_col": 5,
+          "count": 11
+        }
+      ],
+      "examples": [
+        {
+          "index": 226,
+          "source": "optimal",
+          "source_id": "optimal-226",
+          "seed": 226,
+          "image": "images/grid_0226_n7_seed226.svg",
+          "distance_to_centroid": 2.538,
+          "moves": 44,
+          "overlaps": 2,
+          "end": {
+            "row": 0,
+            "col": 2
+          },
+          "path_preview": "ddddddrruluurdrdruulrrdddruuuuuu"
+        },
+        {
+          "index": 368,
+          "source": "optimal",
+          "source_id": "optimal-368",
+          "seed": 368,
+          "image": "images/grid_0368_n7_seed368.svg",
+          "distance_to_centroid": 2.9187,
+          "moves": 42,
+          "overlaps": 0,
+          "end": {
+            "row": 2,
+            "col": 2
+          },
+          "path_preview": "ddddddrrrrrruuuuuuldldrdddluuldd"
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "dataset": "src/optimal/library/optimal_paths.csv",
-  "output_dir": "src/optimal/library/clusters",
+  "output_dir": "src/optimal/library/tmp_size_split",
   "grouped_by": "size",
   "row_count": 1057,
   "source_counts": {
@@ -18,11 +18,11 @@
       "clustered_csv": "size_7/optimal_paths_clustered.csv",
       "summary_json": "size_7/summary.json",
       "selected_strategy": {
-        "embedding": "count_svd",
+        "embedding": "visit_order_svd",
         "algorithm": "kmeans",
-        "selected_k": 3,
-        "silhouette": 0.1668,
-        "davies_bouldin": 1.7879
+        "selected_k": 4,
+        "silhouette": 0.1243,
+        "davies_bouldin": 2.0972
       }
     },
     {
@@ -34,11 +34,11 @@
       "clustered_csv": "size_10/optimal_paths_clustered.csv",
       "summary_json": "size_10/summary.json",
       "selected_strategy": {
-        "embedding": "tfidf_svd",
-        "algorithm": "agglomerative",
-        "selected_k": 8,
-        "silhouette": 0.4668,
-        "davies_bouldin": 0.4967
+        "embedding": "visit_order_svd",
+        "algorithm": "kmeans",
+        "selected_k": 4,
+        "silhouette": 0.3427,
+        "davies_bouldin": 0.9631
       }
     },
     {
@@ -52,9 +52,9 @@
       "selected_strategy": {
         "embedding": "visit_order_svd",
         "algorithm": "kmeans",
-        "selected_k": 7,
-        "silhouette": 0.3135,
-        "davies_bouldin": 0.5467
+        "selected_k": 4,
+        "silhouette": 0.2653,
+        "davies_bouldin": 0.8761
       }
     }
   ]

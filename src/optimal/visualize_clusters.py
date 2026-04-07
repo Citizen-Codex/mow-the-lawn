@@ -101,10 +101,19 @@ def load_summary(summary_path: str | Path | None) -> dict[str, object]:
     if not file_path.exists():
         raise FileNotFoundError(f"Summary JSON not found: {file_path}")
 
-    payload = json.loads(file_path.read_text(encoding="utf-8"))
-    if "clustering_strategy" not in payload:
-        raise ValueError("Summary JSON is missing 'clustering_strategy'")
-    return payload
+    return json.loads(file_path.read_text(encoding="utf-8"))
+
+
+def is_grouped_summary(summary: dict[str, object]) -> bool:
+    return "sizes" in summary and "clustering_strategy" not in summary
+
+
+def resolve_summary_entry_path(summary_path: Path, relative_path: str) -> Path:
+    return (summary_path.parent / relative_path).resolve()
+
+
+def size_projection_dir(root: Path, size: int) -> Path:
+    return root / f"size_{size}"
 
 
 def strategy_key(embedding: str, algorithm: str, n_clusters: int) -> str:
@@ -209,14 +218,23 @@ def reduce_to_2d(features: np.ndarray) -> np.ndarray:
 
 
 def build_base_points(
-    dataframe: pd.DataFrame, *, html_output: Path | None
+    dataframe: pd.DataFrame,
+    *,
+    html_output: Path | None,
+    asset_root: Path,
 ) -> list[dict[str, object]]:
-    library_root = Path(__file__).resolve().parent / "library"
     html_parent = html_output.parent if html_output is not None else None
     base_points: list[dict[str, object]] = []
 
     for point_id, row in enumerate(dataframe.to_dict("records")):
-        image_path = library_root / Path(str(row["image"]))
+        source = str(row.get("source", "optimal") or "optimal")
+        user = "" if pd.isna(row.get("user")) else str(row.get("user", ""))
+        config_value = row.get("config_id")
+        config_id = None if pd.isna(config_value) else int(config_value)
+        config_label = (
+            "" if pd.isna(row.get("config_label")) else str(row.get("config_label", ""))
+        )
+        image_path = asset_root / Path(str(row["image"]))
         image_href = (
             relative_href(html_parent, image_path) if html_parent is not None else ""
         )
@@ -224,6 +242,12 @@ def build_base_points(
             {
                 "id": point_id,
                 "index": int(row["index"]),
+                "source": source,
+                "source_id": str(row.get("source_id", f"{source}-{int(row['index'])}")),
+                "user": user,
+                "config_id": config_id,
+                "config_label": config_label,
+                "size": int(row["size"]),
                 "seed": int(row["seed"]),
                 "moves": int(row["moves"]),
                 "overlaps": int(row["overlaps"]),
@@ -244,6 +268,7 @@ def build_strategy_views(
     *,
     summary: dict[str, object],
     html_output: Path | None,
+    asset_root: Path,
     width: int,
     height: int,
     max_components: int,
@@ -261,7 +286,11 @@ def build_strategy_views(
     plot_width = width - margin_left - margin_right - legend_width
     plot_height = height - margin_top - margin_bottom
 
-    base_points = build_base_points(dataframe, html_output=html_output)
+    base_points = build_base_points(
+        dataframe,
+        html_output=html_output,
+        asset_root=asset_root,
+    )
     prepared = prepare_paths(dataframe)
     global_motif_counts = motif_counts(prepared.normalized_paths, motif_length)
     specs = strategy_specs(summary, strategy_limit)
@@ -351,6 +380,17 @@ def build_strategy_views(
         cluster_views: list[dict[str, object]] = []
         for cluster_id in cluster_ids:
             subset = assigned[assigned["cluster"] == cluster_id].copy()
+            source_series = (
+                subset["source"]
+                if "source" in subset.columns
+                else pd.Series(["optimal"] * len(subset))
+            )
+            source_counts = {
+                str(source): int(count)
+                for source, count in source_series.fillna("optimal")
+                .value_counts()
+                .items()
+            }
             motifs = top_motifs(
                 subset["normalized_path"].tolist(),
                 global_counts=global_motif_counts,
@@ -385,6 +425,7 @@ def build_strategy_views(
                     "avg_moves": round(float(subset["moves"].mean()), 2),
                     "avg_overlaps": round(float(subset["overlaps"].mean()), 2),
                     "avg_turn_rate": round(float(subset["turn_rate"].mean()), 4),
+                    "source_counts": source_counts,
                     "centroid_x": round(float(centroid_x), 2),
                     "centroid_y": round(float(centroid_y), 2),
                     "top_motifs": motifs[:3],
@@ -455,15 +496,27 @@ def render_svg(
 
     for overlay in selected_view["points"]:
         point = base_lookup[int(overlay["id"])]
+        is_human = str(point.get("source", "optimal")) == "human"
+        point_label = str(point.get("source_id", f"optimal-{point['index']}"))
+        user_suffix = (
+            f" user={point['user']} config={point['config_label']}"
+            if is_human and point.get("user")
+            else ""
+        )
         tooltip = escape(
             (
-                f"index={point['index']} seed={point['seed']} cluster={overlay['cluster']} "
+                f"record={point_label} source={point['source']} seed={point['seed']} "
+                f"cluster={overlay['cluster']} "
                 f"moves={point['moves']} overlaps={point['overlaps']} "
-                f"path={str(point['path'])[:48]}"
+                f"path={str(point['path'])[:48]}{user_suffix}"
             )
         )
+        radius = point_radius + 1.6 if is_human else point_radius
+        stroke = "#0f172a" if is_human else "#ffffff"
+        stroke_width = 1.5 if is_human else 0.9
+        opacity = 0.96 if is_human else 0.78
         parts.append(
-            f'<circle cx="{overlay["screen_x"]:.2f}" cy="{overlay["screen_y"]:.2f}" r="{point_radius}" fill="{overlay["color"]}" fill-opacity="0.78" stroke="#ffffff" stroke-width="0.9"><title>{tooltip}</title></circle>'
+            f'<circle cx="{overlay["screen_x"]:.2f}" cy="{overlay["screen_y"]:.2f}" r="{radius}" fill="{overlay["color"]}" fill-opacity="{opacity}" stroke="{stroke}" stroke-width="{stroke_width}"><title>{tooltip}</title></circle>'
         )
 
     legend_x = plot_x0 + plot_width + 24
@@ -603,12 +656,12 @@ def render_html(
   <div class=\"app\">
     <aside class=\"sidebar\">
       <h1>Optimal Path Cluster Explorer</h1>
-      <p class=\"lede\">Interactive local viewer for multiple evaluated clustering strategies. Switch embeddings or clustering algorithms, filter clusters, search by index/seed/path text, and click points to inspect their source SVGs.</p>
+      <p class=\"lede\">Interactive local viewer for multiple evaluated clustering strategies. Switch embeddings or clustering algorithms, filter clusters, search by source/user/index/seed/path text, and click points to inspect their source SVGs.</p>
 
       <section class=\"section\">
         <h2 class=\"section-title\">Search</h2>
         <div class=\"search-row\">
-          <input id=\"search\" type=\"search\" placeholder=\"Search index, seed, cluster, or path substring\" />
+          <input id=\"search\" type=\"search\" placeholder=\"Search source, user, index, seed, cluster, or path substring\" />
           <button id=\"clear-search\" type=\"button\">Clear</button>
           <button id=\"clear-selection\" type=\"button\">Reset</button>
         </div>
@@ -634,7 +687,9 @@ def render_html(
           <div id=\"selection-empty\" class=\"details-empty\">Click a point in the scatter plot to inspect its path and cluster details. The matching grid preview will appear beside the plot.</div>
           <div id=\"selection-content\" hidden>
             <div class=\"details-grid\">
+              <div><span class=\"label\">Source</span><span id=\"detail-source\" class=\"value\"></span></div>
               <div><span class=\"label\">Index</span><span id=\"detail-index\" class=\"value\"></span></div>
+              <div><span class=\"label\">User / Config</span><span id=\"detail-context\" class=\"value\"></span></div>
               <div><span class=\"label\">Seed</span><span id=\"detail-seed\" class=\"value\"></span></div>
               <div><span class=\"label\">Strategy</span><span id=\"detail-strategy\" class=\"value\"></span></div>
               <div><span class=\"label\">Cluster</span><span id=\"detail-cluster\" class=\"value\"></span></div>
@@ -691,6 +746,7 @@ def render_html(
           <div id=\"preview-empty\" class=\"preview-empty\">Select a point to load its grid preview here.</div>
           <div id=\"preview-content\" class=\"preview-content\" hidden>
             <div class=\"preview-meta\">
+              <div><span class=\"label\">Source</span><span id=\"preview-source\" class=\"value\"></span></div>
               <div><span class=\"label\">Index</span><span id=\"preview-index\" class=\"value\"></span></div>
               <div><span class=\"label\">Cluster</span><span id=\"preview-cluster\" class=\"value\"></span></div>
               <div><span class=\"label\">Strategy</span><span id=\"preview-strategy\" class=\"value\"></span></div>
@@ -731,7 +787,9 @@ def render_html(
 
     const selectionEmpty = document.getElementById("selection-empty");
     const selectionContent = document.getElementById("selection-content");
+    const detailSource = document.getElementById("detail-source");
     const detailIndex = document.getElementById("detail-index");
+    const detailContext = document.getElementById("detail-context");
     const detailSeed = document.getElementById("detail-seed");
     const detailStrategy = document.getElementById("detail-strategy");
     const detailCluster = document.getElementById("detail-cluster");
@@ -747,6 +805,7 @@ def render_html(
     const detailImage = document.getElementById("detail-image");
     const previewEmpty = document.getElementById("preview-empty");
     const previewContent = document.getElementById("preview-content");
+    const previewSource = document.getElementById("preview-source");
     const previewIndex = document.getElementById("preview-index");
     const previewCluster = document.getElementById("preview-cluster");
     const previewStrategy = document.getElementById("preview-strategy");
@@ -776,10 +835,31 @@ def render_html(
       return currentClusterLookup.get(clusterId);
     }
 
+    function pointLabel(basePoint) {
+      return basePoint.source_id || (basePoint.source + "-" + basePoint.index);
+    }
+
+    function pointContext(basePoint) {
+      if (basePoint.source !== "human") return "optimal library";
+      const parts = [];
+      if (basePoint.user) parts.push(basePoint.user);
+      if (basePoint.config_label) parts.push(basePoint.config_label);
+      if (basePoint.size) parts.push(basePoint.size + "x" + basePoint.size);
+      return parts.length ? parts.join(" | ") : "human submission";
+    }
+
+    function pointRadius(basePoint) {
+      return basePoint.source === "human" ? payload.point_radius + 1.6 : payload.point_radius;
+    }
+
     function matchesQuery(basePoint, overlay, rawQuery) {
       const query = rawQuery.trim().toLowerCase();
       if (!query) return true;
       return String(basePoint.index).includes(query)
+        || pointLabel(basePoint).toLowerCase().includes(query)
+        || String(basePoint.source || "").toLowerCase().includes(query)
+        || String(basePoint.user || "").toLowerCase().includes(query)
+        || String(basePoint.config_label || "").toLowerCase().includes(query)
         || String(basePoint.seed).includes(query)
         || String(overlay.cluster) === query
         || basePoint.path.toLowerCase().includes(query)
@@ -821,7 +901,9 @@ def render_html(
       selectionContent.hidden = false;
       previewEmpty.hidden = true;
       previewContent.hidden = false;
+      detailSource.textContent = pointLabel(basePoint) + " (" + basePoint.source + ")";
       detailIndex.textContent = String(basePoint.index);
+      detailContext.textContent = pointContext(basePoint);
       detailSeed.textContent = String(basePoint.seed);
       detailStrategy.textContent = currentStrategy.label;
       detailCluster.textContent = String(overlay.cluster);
@@ -837,6 +919,7 @@ def render_html(
       detailLink.textContent = "Open " + basePoint.image;
       detailImage.src = basePoint.image_href;
       detailImage.alt = "Path preview for index " + basePoint.index;
+      previewSource.textContent = pointLabel(basePoint);
       previewIndex.textContent = String(basePoint.index);
       previewCluster.textContent = String(overlay.cluster);
       previewStrategy.textContent = currentStrategy.label;
@@ -945,8 +1028,12 @@ def render_html(
         const motifSummary = cluster.top_motifs.length
           ? cluster.top_motifs.map((motif) => motif.motif).join(", ")
           : "no dominant motifs";
+        const sourceSummary = Object.entries(cluster.source_counts || {})
+          .map(([source, count]) => source + "=" + count)
+          .join(" | ");
         meta.innerHTML = "<div>" + cluster.hint + "</div>"
           + "<div>avg moves=" + cluster.avg_moves.toFixed(2) + " | avg overlaps=" + cluster.avg_overlaps.toFixed(2) + "</div>"
+          + "<div>sources: " + (sourceSummary || "unknown") + "</div>"
           + "<div>motifs: " + motifSummary + "</div>";
 
         const actions = document.createElement("div");
@@ -1017,7 +1104,7 @@ def render_html(
         circle.addEventListener("mouseenter", () => {
           const overlay = getOverlay(basePoint.id);
           statusBar.textContent = "strategy=" + currentStrategy.label
-            + " | index=" + basePoint.index
+            + " | record=" + pointLabel(basePoint)
             + " seed=" + basePoint.seed
             + " cluster=" + overlay.cluster
             + " moves=" + basePoint.moves
@@ -1035,14 +1122,14 @@ def render_html(
             return;
           }
           statusBar.textContent = "Pinned selection: strategy=" + currentStrategy.label
-            + " | index=" + selectedBase.index
+            + " | record=" + pointLabel(selectedBase)
             + " cluster=" + selectedOverlay.cluster;
         });
         circle.addEventListener("click", () => {
           selectedPointId = basePoint.id;
           updateSelection(selectedPointId);
           statusBar.textContent = "Pinned selection: strategy=" + currentStrategy.label
-            + " | index=" + basePoint.index
+            + " | record=" + pointLabel(basePoint)
             + " cluster=" + getOverlay(basePoint.id).cluster;
           refreshPoints();
         });
@@ -1064,12 +1151,17 @@ def render_html(
         if (!overlay || !circle || !title) continue;
         circle.setAttribute("cx", String(overlay.screen_x));
         circle.setAttribute("cy", String(overlay.screen_y));
+        circle.dataset.baseRadius = String(pointRadius(basePoint));
+        circle.dataset.baseStroke = basePoint.source === "human" ? "#0f172a" : "#ffffff";
+        circle.dataset.baseStrokeWidth = basePoint.source === "human" ? "1.5" : "0.9";
+        circle.dataset.baseOpacity = basePoint.source === "human" ? "0.96" : "0.78";
         circle.setAttribute("fill", overlay.color);
-        circle.setAttribute("stroke", "#ffffff");
-        circle.setAttribute("stroke-width", "0.9");
-        circle.setAttribute("fill-opacity", "0.78");
+        circle.setAttribute("stroke", circle.dataset.baseStroke);
+        circle.setAttribute("stroke-width", circle.dataset.baseStrokeWidth);
+        circle.setAttribute("fill-opacity", circle.dataset.baseOpacity);
         title.textContent = "strategy=" + currentStrategy.label
-          + " | index=" + basePoint.index
+          + " | record=" + pointLabel(basePoint)
+          + " source=" + basePoint.source
           + " seed=" + basePoint.seed
           + " cluster=" + overlay.cluster
           + " moves=" + basePoint.moves
@@ -1096,10 +1188,14 @@ def render_html(
         }
 
         const selected = selectedPointId === basePoint.id;
-        circle.setAttribute("r", selected ? String(payload.point_radius + 2.4) : String(payload.point_radius));
-        circle.setAttribute("stroke", selected ? "#0f172a" : "#ffffff");
-        circle.setAttribute("stroke-width", selected ? "2.1" : "0.9");
-        circle.setAttribute("fill-opacity", isVisible ? (selected ? "1" : "0.78") : "0");
+        const baseRadius = Number(circle.dataset.baseRadius || payload.point_radius);
+        const baseStroke = circle.dataset.baseStroke || "#ffffff";
+        const baseStrokeWidth = circle.dataset.baseStrokeWidth || "0.9";
+        const baseOpacity = circle.dataset.baseOpacity || "0.78";
+        circle.setAttribute("r", selected ? String(baseRadius + 1.8) : String(baseRadius));
+        circle.setAttribute("stroke", selected ? "#0f172a" : baseStroke);
+        circle.setAttribute("stroke-width", selected ? "2.1" : baseStrokeWidth);
+        circle.setAttribute("fill-opacity", isVisible ? (selected ? "1" : baseOpacity) : "0");
       }
 
       for (const group of centroidLayer.children) {
@@ -1175,10 +1271,52 @@ def render_html(
     )
 
 
+def render_size_index_html(entries: list[dict[str, object]]) -> str:
+    items = "\n".join(
+        (
+            "<li>"
+            f'<a href="{escape(str(entry["html_href"]))}">{int(entry["size"])}x{int(entry["size"])}</a>'
+            f"<span> rows={int(entry['row_count'])} | "
+            f"sources={escape(str(entry['sources']))} | "
+            f"strategy={escape(str(entry['strategy']))}</span>"
+            "</li>"
+        )
+        for entry in entries
+    )
+    return f"""<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"UTF-8\" />
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
+  <title>Cluster Explorer Index</title>
+  <style>
+    body {{ margin: 0; padding: 32px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #f8fafc; color: #0f172a; }}
+    .card {{ max-width: 760px; padding: 24px; border: 1px solid #cbd5e1; border-radius: 20px; background: #ffffff; box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08); }}
+    h1 {{ margin: 0 0 10px; font-size: 28px; }}
+    p {{ margin: 0 0 20px; color: #475569; line-height: 1.6; }}
+    ul {{ margin: 0; padding-left: 20px; display: grid; gap: 12px; }}
+    li {{ line-height: 1.6; }}
+    a {{ font-weight: 700; color: #0f766e; text-decoration: none; margin-right: 10px; }}
+    a:hover {{ text-decoration: underline; }}
+    span {{ color: #475569; }}
+  </style>
+</head>
+<body>
+  <div class=\"card\">
+    <h1>Cluster Explorer By Grid Size</h1>
+    <p>Each explorer now keeps human and generated paths separated by board size. Open a size-specific page to inspect the clusters for that grid size only.</p>
+    <ul>{items}</ul>
+  </div>
+</body>
+</html>
+"""
+
+
 def visualize_clusters_2d(
     clustered_csv: str | Path = DEFAULT_CLUSTERED_CSV,
     *,
     summary_json: str | Path | None = DEFAULT_SUMMARY_JSON,
+    size: int | None = None,
     svg_output: str | Path = DEFAULT_SVG_OUTPUT,
     html_output: str | Path | None = DEFAULT_HTML_OUTPUT,
     csv_output: str | Path = DEFAULT_CSV_OUTPUT,
@@ -1207,12 +1345,117 @@ def visualize_clusters_2d(
     html_path = None if html_output is None else Path(html_output)
     csv_path = Path(csv_output)
 
-    dataframe = load_clustered_paths(clustered_path)
     summary = load_summary(summary_path)
+    if is_grouped_summary(summary):
+        size_entries = list(summary.get("sizes", []))
+        if not size_entries:
+            raise ValueError("Grouped summary JSON is missing size entries")
+
+        if size is not None:
+            selected_entry = next(
+                (entry for entry in size_entries if int(entry["size"]) == size),
+                None,
+            )
+            if selected_entry is None:
+                available_sizes = ", ".join(
+                    str(int(entry["size"])) for entry in size_entries
+                )
+                raise ValueError(
+                    f"Size {size} was not found in the grouped summary. Available sizes: {available_sizes}"
+                )
+
+            size_dir = size_projection_dir(
+                summary_path.parent, int(selected_entry["size"])
+            )
+            return visualize_clusters_2d(
+                resolve_summary_entry_path(
+                    summary_path, str(selected_entry["clustered_csv"])
+                ),
+                summary_json=resolve_summary_entry_path(
+                    summary_path, str(selected_entry["summary_json"])
+                ),
+                size=None,
+                svg_output=size_dir / "cluster_projection.svg",
+                html_output=size_dir / "cluster_projection.html",
+                csv_output=size_dir / "cluster_projection.csv",
+                width=width,
+                height=height,
+                point_radius=point_radius,
+                max_components=max_components,
+                motif_length=motif_length,
+                strategy_limit=strategy_limit,
+                random_state=random_state,
+            )
+
+        generated_entries: list[dict[str, object]] = []
+        for entry in size_entries:
+            size_value = int(entry["size"])
+            size_dir = size_projection_dir(summary_path.parent, size_value)
+            visualize_clusters_2d(
+                resolve_summary_entry_path(summary_path, str(entry["clustered_csv"])),
+                summary_json=resolve_summary_entry_path(
+                    summary_path, str(entry["summary_json"])
+                ),
+                size=None,
+                svg_output=size_dir / "cluster_projection.svg",
+                html_output=size_dir / "cluster_projection.html",
+                csv_output=size_dir / "cluster_projection.csv",
+                width=width,
+                height=height,
+                point_radius=point_radius,
+                max_components=max_components,
+                motif_length=motif_length,
+                strategy_limit=strategy_limit,
+                random_state=random_state,
+            )
+            generated_entries.append(
+                {
+                    "size": size_value,
+                    "row_count": int(entry["row_count"]),
+                    "sources": ", ".join(
+                        f"{source}={count}"
+                        for source, count in dict(entry["source_counts"]).items()
+                    ),
+                    "strategy": (
+                        f"{entry['selected_strategy']['embedding']} + "
+                        f"{entry['selected_strategy']['algorithm']} "
+                        f"(k={int(entry['selected_strategy']['selected_k'])})"
+                    ),
+                    "html_href": relative_href(
+                        html_path.parent
+                        if html_path is not None
+                        else summary_path.parent,
+                        size_dir / "cluster_projection.html",
+                    ),
+                    "svg_path": str(size_dir / "cluster_projection.svg"),
+                    "csv_path": str(size_dir / "cluster_projection.csv"),
+                }
+            )
+
+        if html_path is not None:
+            html_path.parent.mkdir(parents=True, exist_ok=True)
+            html_path.write_text(
+                render_size_index_html(generated_entries),
+                encoding="utf-8",
+            )
+            print(f"Wrote {html_path}")
+        csv_path.parent.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame(generated_entries).to_csv(csv_path, index=False)
+        print(f"Wrote {csv_path}")
+        return pd.DataFrame(generated_entries)
+
+    if "clustering_strategy" not in summary:
+        raise ValueError("Summary JSON is missing 'clustering_strategy'")
+
+    dataframe = load_clustered_paths(clustered_path)
+    asset_root = Path(
+        str(summary.get("asset_root", Path(__file__).resolve().parent / "library"))
+    )
     base_points, strategy_views, selected_key = build_strategy_views(
         dataframe,
         summary=summary,
         html_output=html_path,
+        asset_root=asset_root,
         width=width,
         height=height,
         max_components=max_components,
@@ -1302,6 +1545,14 @@ def main() -> None:
         help="Summary JSON from the classifier, including evaluated strategy candidates",
     )
     parser.add_argument(
+        "--size",
+        type=int,
+        help=(
+            "Optional grid size to render when the summary JSON is grouped by size; "
+            "omit it to generate explorers for every size and a root index page"
+        ),
+    )
+    parser.add_argument(
         "--svg-output",
         default=str(DEFAULT_SVG_OUTPUT),
         help="Output path for the SVG scatter plot",
@@ -1372,6 +1623,7 @@ def main() -> None:
     visualize_clusters_2d(
         args.clustered_csv,
         summary_json=args.summary_json,
+        size=args.size,
         svg_output=args.svg_output,
         html_output=args.html_output,
         csv_output=args.csv_output,

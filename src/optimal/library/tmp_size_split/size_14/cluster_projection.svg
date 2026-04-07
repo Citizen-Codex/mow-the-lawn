@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="920" viewBox="0 0 1280 920">
+<rect width="100%" height="100%" fill="#f8fafc" />
+<text x="80" y="32" fill="#0f172a" font-size="24" font-weight="700">Optimal Path Cluster Explorer</text>
+<text x="80" y="54" fill="#475569" font-size="13">Projection for visit_order_svd + kmeans (k=4); open the HTML explorer to switch strategies interactively.</text>
+<rect x="80" y="70" width="880" height="780" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" rx="12" />
+<line x1="80" y1="460.0" x2="960" y2="460.0" stroke="#e2e8f0" stroke-width="1" />
+<line x1="520.0" y1="70" x2="520.0" y2="850" stroke="#e2e8f0" stroke-width="1" />
+<text x="520.0" y="902" text-anchor="middle" fill="#475569" font-size="12">Projection axis 0</text>
+<text x="20" y="460.0" text-anchor="middle" fill="#475569" font-size="12" transform="rotate(-90 20 460.0)">Projection axis 1</text>
+<circle cx="677.99" cy="586.42" r="6.1" fill="#2563eb" fill-opacity="0.96" stroke="#0f172a" stroke-width="1.5"><title>record=human-49 source=human seed=3 cluster=0 moves=170 overlaps=11 path=rrrrrrlldlllldrrrrrdllllldrrrrrdllllldrrdrurrdld user=z7xngq config=config 3</title></circle>
+<circle cx="796.61" cy="386.50" r="6.1" fill="#2563eb" fill-opacity="0.96" stroke="#0f172a" stroke-width="1.5"><title>record=human-42 source=human seed=3 cluster=0 moves=173 overlaps=14 path=rrrrrrlldlllldddddrrdrrdddlllldddrrrrrrrrrrrrruu user=zizsmx config=config 3</title></circle>
+<circle cx="702.93" cy="535.10" r="6.1" fill="#2563eb" fill-opacity="0.96" stroke="#0f172a" stroke-width="1.5"><title>record=human-37 source=human seed=3 cluster=0 moves=174 overlaps=15 path=rrrrrrlldlllldrrrrrdllllldrrrrrdllllldrrdrrdddll user=6mncs5 config=config 3</title></circle>
+<circle cx="689.42" cy="606.09" r="6.1" fill="#2563eb" fill-opacity="0.96" stroke="#0f172a" stroke-width="1.5"><title>record=human-56 source=human seed=3 cluster=0 moves=172 overlaps=13 path=rrrrrrlldlllldrrrrrdllllldrrrrrdllllldrrdrurdrur user=espazt config=config 3</title></circle>
+<circle cx="691.08" cy="621.33" r="6.1" fill="#2563eb" fill-opacity="0.96" stroke="#0f172a" stroke-width="1.5"><title>record=human-75 source=human seed=3 cluster=0 moves=179 overlaps=20 path=rrrrrrlldlllldrrrrrdllllldddruurdddruuurddddddll user=02q6hy config=config 3</title></circle>
+<circle cx="789.62" cy="470.68" r="6.1" fill="#2563eb" fill-opacity="0.96" stroke="#0f172a" stroke-width="1.5"><title>record=human-63 source=human seed=3 cluster=0 moves=176 overlaps=17 path=rrrdllldrrrdllldrrrdllldrrdrurddddlllldddruurddr user=jww8vb config=config 3</title></circle>
+<circle cx="899.31" cy="333.24" r="6.1" fill="#2563eb" fill-opacity="0.96" stroke="#0f172a" stroke-width="1.5"><title>record=human-67 source=human seed=3 cluster=0 moves=172 overlaps=13 path=ddddddrrdrrdddlllldddrrrrrrrrrrrrruuuudddlllllll user=nnqd8q config=config 3</title></circle>
+<circle cx="684.87" cy="450.71" r="6.1" fill="#2563eb" fill-opacity="0.96" stroke="#0f172a" stroke-width="1.5"><title>record=human-30 source=human seed=3 cluster=0 moves=189 overlaps=30 path=rrrrrrlldlllldrrrrrdddddddddddllllluuurrrrrrrrrr user=wp57tp config=config 3</title></circle>
+<circle cx="427.43" cy="712.11" r="6.1" fill="#dc2626" fill-opacity="0.96" stroke="#0f172a" stroke-width="1.5"><title>record=human-71 source=human seed=3 cluster=1 moves=180 overlaps=21 path=rrrrrrlldlllldrrrrrdllllldrrrrdlllldrrdrurdddddl user=pd8p8o config=config 3</title></circle>
+<circle cx="540.00" cy="708.36" r="6.1" fill="#dc2626" fill-opacity="0.96" stroke="#0f172a" stroke-width="1.5"><title>record=human-29 source=human seed=3 cluster=1 moves=176 overlaps=17 path=rrrrrrlldlllldrrrrrdllllldddruurdddruuurdddddddu user=02w4ix config=config 3</title></circle>
+<circle cx="617.81" cy="796.21" r="6.1" fill="#dc2626" fill-opacity="0.96" stroke="#0f172a" stroke-width="1.5"><title>record=human-60 source=human seed=3 cluster=1 moves=206 overlaps=47 path=ddddddruuuuuurdddddddruuuuuuurdddddddddddddllllu user=gi4o94 config=config 3</title></circle>
+<circle cx="179.95" cy="123.79" r="6.1" fill="#16a34a" fill-opacity="0.96" stroke="#0f172a" stroke-width="1.5"><title>record=human-22 source=human seed=3 cluster=2 moves=182 overlaps=23 path=rrrrrrllddrdrruruurrrrrddddddduuulllrruuulddullu user=z4siol config=config 3</title></circle>
+<circle cx="140.69" cy="454.34" r="6.1" fill="#16a34a" fill-opacity="0.96" stroke="#0f172a" stroke-width="1.5"><title>record=human-50 source=human seed=3 cluster=2 moves=177 overlaps=18 path=rrrrrrlldlllldddddruuuurrrrdlllddddruuurrrururuu user=rxswju config=config 3</title></circle>
+<circle cx="870.72" cy="187.10" r="6.1" fill="#d97706" fill-opacity="0.96" stroke="#0f172a" stroke-width="1.5"><title>record=human-38 source=human seed=3 cluster=3 moves=195 overlaps=36 path=rdldddddrrdrrddddddlllluuurrrddlllrudurrrrddrrrr user=nr2iov config=config 3</title></circle>
+<text x="984" y="80" fill="#0f172a" font-size="16" font-weight="700">visit_order_svd + kmeans (k=4)</text>
+<text x="984" y="100" fill="#475569" font-size="12">silhouette=0.2653 | davies-bouldin=0.8761</text>
+<circle cx="741.48" cy="498.76" r="9" fill="#ffffff" stroke="#2563eb" stroke-width="3" />
+<text x="741.48" y="502.76" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="700">0</text>
+<circle cx="992" cy="131" r="7" fill="#2563eb" />
+<text x="1008" y="136" fill="#0f172a" font-size="13" font-weight="700">Cluster 0 (8)</text>
+<text x="1008" y="154" fill="#475569" font-size="12">motif=udddl, end=(7,13)</text>
+<text x="1008" y="172" fill="#64748b" font-size="11">moves=175.62 overlaps=16.62</text>
+<circle cx="528.42" cy="738.89" r="9" fill="#ffffff" stroke="#dc2626" stroke-width="3" />
+<text x="528.42" y="742.89" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="700">1</text>
+<circle cx="992" cy="195" r="7" fill="#dc2626" />
+<text x="1008" y="200" fill="#0f172a" font-size="13" font-weight="700">Cluster 1 (3)</text>
+<text x="1008" y="218" fill="#475569" font-size="12">motif=uuuuu, end=(9,13)</text>
+<text x="1008" y="236" fill="#64748b" font-size="11">moves=187.33 overlaps=28.33</text>
+<circle cx="160.32" cy="289.07" r="9" fill="#ffffff" stroke="#16a34a" stroke-width="3" />
+<text x="160.32" y="293.07" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="700">2</text>
+<circle cx="992" cy="259" r="7" fill="#16a34a" />
+<text x="1008" y="264" fill="#0f172a" font-size="13" font-weight="700">Cluster 2 (2)</text>
+<text x="1008" y="282" fill="#475569" font-size="12">motif=lllll, end=(5,1)</text>
+<text x="1008" y="300" fill="#64748b" font-size="11">moves=179.50 overlaps=20.50</text>
+<circle cx="870.72" cy="187.10" r="9" fill="#ffffff" stroke="#d97706" stroke-width="3" />
+<text x="870.72" y="191.10" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="700">3</text>
+<circle cx="992" cy="323" r="7" fill="#d97706" />
+<text x="1008" y="328" fill="#0f172a" font-size="13" font-weight="700">Cluster 3 (1)</text>
+<text x="1008" y="346" fill="#475569" font-size="12">motif=, end=(1,4)</text>
+<text x="1008" y="364" fill="#64748b" font-size="11">moves=195.00 overlaps=36.00</text>
+<text x="984" y="896" fill="#64748b" font-size="11">Use cluster_projection.html for strategy switching and point inspection.</text>
+</svg>

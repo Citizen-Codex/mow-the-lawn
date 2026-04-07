@@ -1,0 +1,408 @@
+{
+  "dataset": "src/optimal/library/optimal_paths.csv",
+  "size": 10,
+  "asset_root": "src/optimal/library",
+  "output_dir": "src/optimal/library/tmp_size_split/size_10",
+  "row_count": 14,
+  "source_counts": {
+    "human": 14
+  },
+  "clustering_strategy": {
+    "embedding": "visit_order_svd",
+    "algorithm": "kmeans",
+    "selected_k": 4,
+    "silhouette": 0.3427,
+    "davies_bouldin": 0.9631
+  },
+  "clustering_features": {
+    "type": "visit_order_svd",
+    "feature_blocks": [
+      "first_visit_order",
+      "revisit_count",
+      "blocked_mask"
+    ],
+    "svd_components": 8,
+    "component_names": [
+      "visit_component_0",
+      "visit_component_1",
+      "visit_component_2",
+      "visit_component_3",
+      "visit_component_4",
+      "visit_component_5",
+      "visit_component_6",
+      "visit_component_7"
+    ],
+    "motif_length_for_summary": 5
+  },
+  "strategy_candidates": [
+    {
+      "embedding": "visit_order_svd",
+      "algorithm": "kmeans",
+      "n_clusters": 4,
+      "silhouette": 0.3427,
+      "davies_bouldin": 0.9631
+    }
+  ],
+  "clusters": [
+    {
+      "cluster_id": 0,
+      "size": 6,
+      "share": 0.4286,
+      "hint": "motif=uuuuu, end=(3,0)",
+      "avg_moves": 88.167,
+      "avg_overlaps": 11.167,
+      "avg_open_cells": 78.0,
+      "avg_turn_rate": 0.3872,
+      "avg_run_length": 2.5857,
+      "avg_move_fraction": {
+        "u": 0.2312,
+        "d": 0.2896,
+        "l": 0.2339,
+        "r": 0.2453
+      },
+      "source_counts": {
+        "human": 6
+      },
+      "top_motifs": [
+        {
+          "motif": "uuuuu",
+          "count": 24,
+          "lift": 1.9152
+        },
+        {
+          "motif": "ldddd",
+          "count": 8,
+          "lift": 1.9152
+        },
+        {
+          "motif": "ddddd",
+          "count": 37,
+          "lift": 1.8847
+        },
+        {
+          "motif": "dddlu",
+          "count": 9,
+          "lift": 1.7955
+        },
+        {
+          "motif": "ddddl",
+          "count": 14,
+          "lift": 1.764
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 3,
+          "end_col": 0,
+          "count": 2
+        },
+        {
+          "end_row": 8,
+          "end_col": 2,
+          "count": 2
+        },
+        {
+          "end_row": 1,
+          "end_col": 2,
+          "count": 1
+        },
+        {
+          "end_row": 8,
+          "end_col": 0,
+          "count": 1
+        }
+      ],
+      "examples": [
+        {
+          "index": 62,
+          "source": "human",
+          "source_id": "human-62",
+          "seed": 59,
+          "image": "human_images/human_config2_attempt0062.svg",
+          "distance_to_centroid": 4.647,
+          "moves": 85,
+          "overlaps": 8,
+          "end": {
+            "row": 3,
+            "col": 0
+          },
+          "path_preview": "rrrrrrrrrdddddddddllllrrruuuuuuu",
+          "user": "jww8vb",
+          "config_label": "config 2"
+        },
+        {
+          "index": 34,
+          "source": "human",
+          "source_id": "human-34",
+          "seed": 59,
+          "image": "human_images/human_config2_attempt0034.svg",
+          "distance_to_centroid": 5.319,
+          "moves": 88,
+          "overlaps": 11,
+          "end": {
+            "row": 8,
+            "col": 2
+          },
+          "path_preview": "rrrrrrrrrdddddddddllllrrruuuuuuu",
+          "user": "6mncs5",
+          "config_label": "config 2"
+        }
+      ]
+    },
+    {
+      "cluster_id": 1,
+      "size": 3,
+      "share": 0.2143,
+      "hint": "motif=lllll, end=(2,4)",
+      "avg_moves": 92.0,
+      "avg_overlaps": 15.0,
+      "avg_open_cells": 78.0,
+      "avg_turn_rate": 0.4281,
+      "avg_run_length": 2.3162,
+      "avg_move_fraction": {
+        "u": 0.1959,
+        "d": 0.2284,
+        "l": 0.2499,
+        "r": 0.3257
+      },
+      "source_counts": {
+        "human": 3
+      },
+      "top_motifs": [
+        {
+          "motif": "lllll",
+          "count": 13,
+          "lift": 1.3845
+        },
+        {
+          "motif": "rrrrr",
+          "count": 14,
+          "lift": 0.8014
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 2,
+          "end_col": 4,
+          "count": 1
+        },
+        {
+          "end_row": 3,
+          "end_col": 8,
+          "count": 1
+        },
+        {
+          "end_row": 4,
+          "end_col": 9,
+          "count": 1
+        }
+      ],
+      "examples": [
+        {
+          "index": 70,
+          "source": "human",
+          "source_id": "human-70",
+          "seed": 59,
+          "image": "human_images/human_config2_attempt0070.svg",
+          "distance_to_centroid": 3.8192,
+          "moves": 90,
+          "overlaps": 13,
+          "end": {
+            "row": 2,
+            "col": 4
+          },
+          "path_preview": "rrrrrrrrrdllllllllldduurrrddldrd",
+          "user": "pd8p8o",
+          "config_label": "config 2"
+        },
+        {
+          "index": 74,
+          "source": "human",
+          "source_id": "human-74",
+          "seed": 59,
+          "image": "human_images/human_config2_attempt0074.svg",
+          "distance_to_centroid": 4.9259,
+          "moves": 93,
+          "overlaps": 16,
+          "end": {
+            "row": 4,
+            "col": 9
+          },
+          "path_preview": "rrrrrrrrrdllllllllldduurrrddldrd",
+          "user": "02q6hy",
+          "config_label": "config 2"
+        }
+      ]
+    },
+    {
+      "cluster_id": 2,
+      "size": 3,
+      "share": 0.2143,
+      "hint": "motif=rrdll, end=(8,2)",
+      "avg_moves": 90.0,
+      "avg_overlaps": 13.0,
+      "avg_open_cells": 78.0,
+      "avg_turn_rate": 0.3819,
+      "avg_run_length": 2.5723,
+      "avg_move_fraction": {
+        "u": 0.1107,
+        "d": 0.1997,
+        "l": 0.3337,
+        "r": 0.3559
+      },
+      "source_counts": {
+        "human": 3
+      },
+      "top_motifs": [
+        {
+          "motif": "rrdll",
+          "count": 9,
+          "lift": 3.5145
+        },
+        {
+          "motif": "rdlll",
+          "count": 9,
+          "lift": 3.5145
+        },
+        {
+          "motif": "rrrdl",
+          "count": 9,
+          "lift": 3.0125
+        },
+        {
+          "motif": "drrrr",
+          "count": 9,
+          "lift": 2.8116
+        },
+        {
+          "motif": "dllll",
+          "count": 12,
+          "lift": 2.2493
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 8,
+          "end_col": 2,
+          "count": 3
+        }
+      ],
+      "examples": [
+        {
+          "index": 28,
+          "source": "human",
+          "source_id": "human-28",
+          "seed": 59,
+          "image": "human_images/human_config2_attempt0028.svg",
+          "distance_to_centroid": 2.8063,
+          "moves": 88,
+          "overlaps": 11,
+          "end": {
+            "row": 8,
+            "col": 2
+          },
+          "path_preview": "rrrrrrrrrdllllllllldduurrrdrrrrr",
+          "user": "wp57tp",
+          "config_label": "config 2"
+        },
+        {
+          "index": 55,
+          "source": "human",
+          "source_id": "human-55",
+          "seed": 59,
+          "image": "human_images/human_config2_attempt0055.svg",
+          "distance_to_centroid": 2.8063,
+          "moves": 88,
+          "overlaps": 11,
+          "end": {
+            "row": 8,
+            "col": 2
+          },
+          "path_preview": "rrrrrrrrrdllllllllldduurrrdrrrrr",
+          "user": "espazt",
+          "config_label": "config 2"
+        }
+      ]
+    },
+    {
+      "cluster_id": 3,
+      "size": 2,
+      "share": 0.1429,
+      "hint": "motif=ddddd, end=(3,0)",
+      "avg_moves": 95.0,
+      "avg_overlaps": 18.0,
+      "avg_open_cells": 78.0,
+      "avg_turn_rate": 0.3942,
+      "avg_run_length": 2.5097,
+      "avg_move_fraction": {
+        "u": 0.2003,
+        "d": 0.2319,
+        "l": 0.2684,
+        "r": 0.2994
+      },
+      "source_counts": {
+        "human": 2
+      },
+      "top_motifs": [
+        {
+          "motif": "ddddd",
+          "count": 10,
+          "lift": 1.4134
+        },
+        {
+          "motif": "rrrrr",
+          "count": 16,
+          "lift": 1.3286
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 3,
+          "end_col": 0,
+          "count": 1
+        },
+        {
+          "end_row": 3,
+          "end_col": 6,
+          "count": 1
+        }
+      ],
+      "examples": [
+        {
+          "index": 21,
+          "source": "human",
+          "source_id": "human-21",
+          "seed": 59,
+          "image": "human_images/human_config2_attempt0021.svg",
+          "distance_to_centroid": 5.415,
+          "moves": 97,
+          "overlaps": 20,
+          "end": {
+            "row": 3,
+            "col": 6
+          },
+          "path_preview": "rrrrrrrrrdddddddddllllrrruullllu",
+          "user": "z4siol",
+          "config_label": "config 2"
+        },
+        {
+          "index": 36,
+          "source": "human",
+          "source_id": "human-36",
+          "seed": 59,
+          "image": "human_images/human_config2_attempt0036.svg",
+          "distance_to_centroid": 5.415,
+          "moves": 93,
+          "overlaps": 16,
+          "end": {
+            "row": 3,
+            "col": 0
+          },
+          "path_preview": "rrrrrrrrrdddddddddllllrrruullllu",
+          "user": "nr2iov",
+          "config_label": "config 2"
+        }
+      ]
+    }
+  ]
+}

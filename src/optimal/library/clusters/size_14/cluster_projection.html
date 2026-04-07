@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Optimal Path Cluster Explorer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --panel-border: #cbd5e1;
+      --muted: #475569;
+      --muted-soft: #64748b;
+      --text: #0f172a;
+      --accent: #0f766e;
+      --accent-soft: #ccfbf1;
+      --selected: #0f766e;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+    .app { display: grid; grid-template-columns: 380px 1fr; min-height: 100vh; }
+    .sidebar { padding: 20px; border-right: 1px solid #e2e8f0; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); overflow-y: auto; }
+    .main { padding: 20px; }
+    h1 { margin: 0 0 8px; font-size: 24px; line-height: 1.2; }
+    .lede { margin: 0 0 20px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .section { margin-bottom: 20px; }
+    .section-title { margin: 0 0 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-soft); }
+    .search-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; }
+    input[type="search"] { width: 100%; padding: 10px 12px; border: 1px solid var(--panel-border); border-radius: 10px; font: inherit; background: var(--panel); }
+    button { padding: 10px 12px; border: 1px solid var(--panel-border); border-radius: 10px; background: var(--panel); font: inherit; color: var(--text); cursor: pointer; }
+    button:hover { border-color: #94a3b8; }
+    .toolbar { display: flex; gap: 8px; margin-top: 10px; }
+    .strategy-list, .cluster-list { display: grid; gap: 10px; }
+    .strategy-card, .cluster-card { padding: 12px; border: 1px solid var(--panel-border); border-radius: 14px; background: var(--panel); }
+    .strategy-card.active { border-color: var(--selected); box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.12); }
+    .strategy-top, .cluster-top { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; margin-bottom: 8px; }
+    .strategy-name, .cluster-name { font-weight: 700; font-size: 14px; }
+    .strategy-meta, .cluster-meta { color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .strategy-tags, .cluster-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .tag { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 11px; font-weight: 600; }
+    .tag.selected { background: var(--accent-soft); color: var(--selected); }
+    .cluster-card { padding-bottom: 10px; }
+    .cluster-top { grid-template-columns: auto 1fr auto; align-items: center; }
+    .cluster-color { width: 12px; height: 12px; border-radius: 999px; }
+    .cluster-actions button, .strategy-card button { padding: 6px 10px; font-size: 12px; }
+    .details-card { padding: 14px; border: 1px solid var(--panel-border); border-radius: 16px; background: var(--panel); }
+    .details-empty { color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; margin-bottom: 14px; }
+    .label { display: block; color: var(--muted-soft); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
+    .value { font-size: 14px; font-weight: 600; }
+    .path-block, .hint-block { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+    .path-block { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .preview-link { color: #0f766e; font-size: 13px; font-weight: 600; text-decoration: none; }
+    .preview-link:hover { text-decoration: underline; }
+    .main-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+    .plot-shell { padding: 16px; border: 1px solid #cbd5e1; border-radius: 20px; background: var(--panel); box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08); }
+    .plot-header { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 10px; }
+    .plot-title { font-size: 18px; font-weight: 700; }
+    .plot-subtitle { margin-top: 4px; color: var(--muted); font-size: 13px; }
+    .plot-status { color: var(--muted); font-size: 13px; }
+    .preview-shell { padding: 16px; border: 1px solid #cbd5e1; border-radius: 20px; background: var(--panel); box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08); position: sticky; top: 20px; }
+    .preview-header { margin-bottom: 12px; }
+    .preview-title { font-size: 16px; font-weight: 700; }
+    .preview-subtitle { margin-top: 4px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .preview-empty { color: var(--muted); font-size: 14px; line-height: 1.6; padding: 6px 0; }
+    .preview-content { display: grid; gap: 12px; }
+    .preview-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+    .preview-content img { width: 100%; border-radius: 16px; border: 1px solid #cbd5e1; background: #ffffff; }
+    .preview-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .preview-chip { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 700; }
+    svg { width: 100%; height: auto; display: block; border-radius: 16px; background: #f8fafc; }
+    .point { cursor: pointer; transition: opacity 120ms ease, transform 120ms ease; }
+    .point:hover { opacity: 1; }
+    .centroid-label { font-size: 10px; font-weight: 700; fill: #0f172a; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+    .status-bar { margin-top: 10px; color: var(--muted); font-size: 13px; }
+    @media (max-width: 1180px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { border-right: 0; border-bottom: 1px solid #e2e8f0; }
+      .main-grid { grid-template-columns: 1fr; }
+      .preview-shell { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h1>Optimal Path Cluster Explorer</h1>
+      <p class="lede">Interactive local viewer for multiple evaluated clustering strategies. Switch embeddings or clustering algorithms, filter clusters, search by source/user/index/seed/path text, and click points to inspect their source SVGs.</p>
+
+      <section class="section">
+        <h2 class="section-title">Search</h2>
+        <div class="search-row">
+          <input id="search" type="search" placeholder="Search source, user, index, seed, cluster, or path substring" />
+          <button id="clear-search" type="button">Clear</button>
+          <button id="clear-selection" type="button">Reset</button>
+        </div>
+        <div class="toolbar">
+          <button id="show-all" type="button">Show all</button>
+          <button id="hide-all" type="button">Hide all</button>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Strategies</h2>
+        <div id="strategy-list" class="strategy-list"></div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Clusters</h2>
+        <div id="cluster-list" class="cluster-list"></div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Selection</h2>
+        <div class="details-card">
+          <div id="selection-empty" class="details-empty">Click a point in the scatter plot to inspect its path and cluster details. The matching grid preview will appear beside the plot.</div>
+          <div id="selection-content" hidden>
+            <div class="details-grid">
+              <div><span class="label">Source</span><span id="detail-source" class="value"></span></div>
+              <div><span class="label">Index</span><span id="detail-index" class="value"></span></div>
+              <div><span class="label">User / Config</span><span id="detail-context" class="value"></span></div>
+              <div><span class="label">Seed</span><span id="detail-seed" class="value"></span></div>
+              <div><span class="label">Strategy</span><span id="detail-strategy" class="value"></span></div>
+              <div><span class="label">Cluster</span><span id="detail-cluster" class="value"></span></div>
+              <div><span class="label">Distance</span><span id="detail-distance" class="value"></span></div>
+              <div><span class="label">Moves</span><span id="detail-moves" class="value"></span></div>
+              <div><span class="label">Overlaps</span><span id="detail-overlaps" class="value"></span></div>
+              <div><span class="label">End</span><span id="detail-end" class="value"></span></div>
+              <div><span class="label">Projection</span><span id="detail-projection" class="value"></span></div>
+              <div><span class="label">Rank In Cluster</span><span id="detail-rank" class="value"></span></div>
+            </div>
+            <div>
+              <span class="label">Cluster Hint</span>
+              <div id="detail-hint" class="hint-block"></div>
+            </div>
+            <div>
+              <span class="label">Path</span>
+              <div id="detail-path" class="path-block"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <div class="main-grid">
+        <div class="plot-shell">
+          <div class="plot-header">
+            <div>
+              <div id="plot-title" class="plot-title"></div>
+              <div id="plot-subtitle" class="plot-subtitle"></div>
+            </div>
+            <div id="visible-count" class="plot-status"></div>
+          </div>
+
+          <svg id="projection-svg" viewBox="0 0 1280 920" aria-label="Optimal path cluster projection">
+            <rect width="100%" height="100%" fill="#f8fafc"></rect>
+            <rect x="80" y="70" width="880" height="780" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" rx="14"></rect>
+            <line x1="80" y1="460.0" x2="960" y2="460.0" stroke="#e2e8f0" stroke-width="1"></line>
+            <line x1="520.0" y1="70" x2="520.0" y2="850" stroke="#e2e8f0" stroke-width="1"></line>
+            <text x="520.0" y="902" text-anchor="middle" fill="#64748b" font-size="12">Projection axis 0</text>
+            <text x="22" y="460.0" text-anchor="middle" fill="#64748b" font-size="12" transform="rotate(-90 22 460.0)">Projection axis 1</text>
+            <g id="centroid-layer"></g>
+            <g id="point-layer"></g>
+          </svg>
+
+          <div id="status-bar" class="status-bar">Hover over points for quick context. Click to pin a selection in the sidebar.</div>
+        </div>
+
+        <aside class="preview-shell">
+          <div class="preview-header">
+            <div class="preview-title">Selected Grid</div>
+            <div class="preview-subtitle">Keep the active path preview beside the clustering diagram while you compare geometry and cluster placement.</div>
+          </div>
+          <div id="preview-empty" class="preview-empty">Select a point to load its grid preview here.</div>
+          <div id="preview-content" class="preview-content" hidden>
+            <div class="preview-meta">
+              <div><span class="label">Source</span><span id="preview-source" class="value"></span></div>
+              <div><span class="label">Index</span><span id="preview-index" class="value"></span></div>
+              <div><span class="label">Cluster</span><span id="preview-cluster" class="value"></span></div>
+              <div><span class="label">Strategy</span><span id="preview-strategy" class="value"></span></div>
+              <div><span class="label">End</span><span id="preview-end" class="value"></span></div>
+            </div>
+            <div class="preview-actions">
+              <span id="preview-chip" class="preview-chip"></span>
+              <a id="detail-link" class="preview-link" href="#" target="_blank" rel="noreferrer">Open source SVG</a>
+            </div>
+            <img id="detail-image" alt="Selected path preview" />
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script id="projection-data" type="application/json">{"selected_strategy_key": "visit_order_svd__kmeans__k7", "point_radius": 4.5, "points": [{"id": 0, "index": 49, "source": "human", "source_id": "human-49", "user": "z7xngq", "config_id": 3, "config_label": "config 3", "size": 14, "seed": 3, "moves": 170, "overlaps": 11, "open_cells": 160, "end_row": 7, "end_col": 13, "path": "rrrrrrlldlllldrrrrrdllllldrrrrrdllllldrrdrurrdldrdldrdllullldrrdlldrrrurdrurdrrrrrrruuuudddllllllurrrrlullllduurrrurrlllllurrrulllurrullururduuurddruurrrdlldrrdlldlrrrddd", "image": "human_images/human_config3_attempt0049.svg", "image_href": "../../human_images/human_config3_attempt0049.svg"}, {"id": 1, "index": 56, "source": "human", "source_id": "human-56", "user": "espazt", "config_id": 3, "config_label": "config 3", "size": 14, "seed": 3, "moves": 172, "overlaps": 13, "open_cells": 160, "end_row": 7, "end_col": 13, "path": "rrrrrrlldlllldrrrrrdllllldrrrrrdllllldrrdrurdrurddlldrrdlllllldrrrrrrdlllllldrrrrrrrrrrrrruuuudddllllllurrrrlulllurrurrlllllurrrullurllurrullruruurddruurddddlrruuuurddddddd", "image": "human_images/human_config3_attempt0056.svg", "image_href": "../../human_images/human_config3_attempt0056.svg"}, {"id": 2, "index": 37, "source": "human", "source_id": "human-37", "user": "6mncs5", "config_id": 3, "config_label": "config 3", "size": 14, "seed": 3, "moves": 174, "overlaps": 15, "open_cells": 160, "end_row": 7, "end_col": 13, "path": "rrrrrrlldlllldrrrrrdllllldrrrrrdllllldrrdrrdddlllldddrrulurrddruurddrrrrrrrruuuudddlluldluldlulduulrrrrrluurrllldlllurrurrullllllrrdruuuurddruuulruurddruurrrdlldrrdlldlrrrddd", "image": "human_images/human_config3_attempt0037.svg", "image_href": "../../human_images/human_config3_attempt0037.svg"}, {"id": 3, "index": 75, "source": "human", "source_id": "human-75", "user": "02q6hy", "config_id": 3, "config_label": "config 3", "size": 14, "seed": 3, "moves": 179, "overlaps": 20, "open_cells": 160, "end_row": 1, "end_col": 12, "path": "rrrrrrlldlllldrrrrrdllllldddruurdddruuurddddddlllldddruurdrldruurddruuuuuuuuuruddddddddddrrrrrrruuuudddllulduuldldrlluurlurrurrllllurrullurulurulrrluurdrurrrddddddduuulllrurullurr", "image": "human_images/human_config3_attempt0075.svg", "image_href": "../../human_images/human_config3_attempt0075.svg"}, {"id": 4, "index": 42, "source": "human", "source_id": "human-42", "user": "zizsmx", "config_id": 3, "config_label": "config 3", "size": 14, "seed": 3, "moves": 173, "overlaps": 14, "open_cells": 160, "end_row": 2, "end_col": 11, "path": "rrrrrrlldlllldddddrrdrrdddlllldddrrrrrrrrrrrrruuuudddllllllllllllurrrrrrrrrrlulllllurrrrurrllllllurrrrullllllulluuurddrrdrrrrulllullurrdrrurduuurrrrrddddddduuulllruruullldrr", "image": "human_images/human_config3_attempt0042.svg", "image_href": "../../human_images/human_config3_attempt0042.svg"}, {"id": 5, "index": 67, "source": "human", "source_id": "human-67", "user": "nnqd8q", "config_id": 3, "config_label": "config 3", "size": 14, "seed": 3, "moves": 172, "overlaps": 13, "open_cells": 160, "end_row": 7, "end_col": 13, "path": "ddddddrrdrrdddlllldddrrrrrrrrrrrrruuuudddllllllllllllurrrrrrrrrrlulllllurrrrurrllllllurrrrulllllllluuuuuurdddddrrrrrrullllluuuurrrllddrldrrrurduuurrrrrdlllldrrrrdlldlrrrddd", "image": "human_images/human_config3_attempt0067.svg", "image_href": "../../human_images/human_config3_attempt0067.svg"}, {"id": 6, "index": 63, "source": "human", "source_id": "human-63", "user": "jww8vb", "config_id": 3, "config_label": "config 3", "size": 14, "seed": 3, "moves": 176, "overlaps": 17, "open_cells": 160, "end_row": 0, "end_col": 6, "path": "rrrdllldrrrdllldrrrdllldrrdrurddddlllldddruurddruurddrrrrrullllurrrrrrdldrrurduuuudddllluulllllurrrrurrllllllurrrrullllulurrdrrulruurrrddlrrrddduuuuluruuldluldlulddldlllurluurr", "image": "human_images/human_config3_attempt0063.svg", "image_href": "../../human_images/human_config3_attempt0063.svg"}, {"id": 7, "index": 22, "source": "human", "source_id": "human-22", "user": "z4siol", "config_id": 3, "config_label": "config 3", "size": 14, "seed": 3, "moves": 182, "overlaps": 23, "open_cells": 160, "end_row": 5, "end_col": 1, "path": "rrrrrrllddrdrruruurrrrrddddddduuulllrruuulddullurdllddddrddrrllddrdrdrruuuddddlllllllllllllurrrrrrrrrrullllllllllurrrrrrrruuuluuuulllluullldddddrrdrrddrrruluuuulddddluuuulddluuuulddd", "image": "human_images/human_config3_attempt0022.svg", "image_href": "../../human_images/human_config3_attempt0022.svg"}, {"id": 8, "index": 50, "source": "human", "source_id": "human-50", "user": "rxswju", "config_id": 3, "config_label": "config 3", "size": 14, "seed": 3, "moves": 177, "overlaps": 18, "open_cells": 160, "end_row": 6, "end_col": 7, "path": "rrrrrrlldlllldddddruuuurrrrdlllddddruuurrrururuurrrrrdlllldrrrrddddduuulllrrululllddldrdrddrrllddrdrdrruuuddddlllllllllllllurrrrrrrrrrullllllllllurrrrrrrrullllurrrrulllluurdrudr", "image": "human_images/human_config3_attempt0050.svg", "image_href": "../../human_images/human_config3_attempt0050.svg"}, {"id": 9, "index": 71, "source": "human", "source_id": "human-71", "user": "pd8p8o", "config_id": 3, "config_label": "config 3", "size": 14, "seed": 3, "moves": 180, "overlaps": 21, "open_cells": 160, "end_row": 9, "end_col": 13, "path": "rrrrrrlldlllldrrrrrdllllldrrrrdlllldrrdrurdddddlullldrrdlldrrrurdruuuuuuuuurururuurrrrrdllllldrrrrrdlldlrrrddduuuuulllllddldlddddddddruuuuuuurudrddrrllulddrdldrdldrruuudrddrurduuuu", "image": "human_images/human_config3_attempt0071.svg", "image_href": "../../human_images/human_config3_attempt0071.svg"}, {"id": 10, "index": 29, "source": "human", "source_id": "human-29", "user": "02w4ix", "config_id": 3, "config_label": "config 3", "size": 14, "seed": 3, "moves": 176, "overlaps": 17, "open_cells": 160, "end_row": 9, "end_col": 13, "path": "rrrrrrlldlllldrrrrrdllllldddruurdddruuurdddddddulllldddruurddruurddruuuuuuuuuurddddddddddruuuuuuuuuuuruurrrrrddddddduuulllrrulurulldluldddddrdldrrrlldldrrdrllllrddrurdrurdruuuu", "image": "human_images/human_config3_attempt0029.svg", "image_href": "../../human_images/human_config3_attempt0029.svg"}, {"id": 11, "index": 30, "source": "human", "source_id": "human-30", "user": "wp57tp", "config_id": 3, "config_label": "config 3", "size": 14, "seed": 3, "moves": 189, "overlaps": 30, "open_cells": 160, "end_row": 8, "end_col": 11, "path": "rrrrrrlldlllldrrrrrdddddddddddllllluuurrrrrrrrrrdddrrruuuudddllulllllllllldrrrrrrrrdllluuuuuuuuuulllllldddrrrrddduulluuuldrrrulrrrruuruurrrrrddddddduuulllrruuullldrrdullldddlddddruuurdddurr", "image": "human_images/human_config3_attempt0030.svg", "image_href": "../../human_images/human_config3_attempt0030.svg"}, {"id": 12, "index": 38, "source": "human", "source_id": "human-38", "user": "nr2iov", "config_id": 3, "config_label": "config 3", "size": 14, "seed": 3, "moves": 195, "overlaps": 36, "open_cells": 160, "end_row": 1, "end_col": 4, "path": "rdldddddrrdrrddddddlllluuurrrddlllrudurrrrddrrrrrrrruuuudddllululuurrlluullllllrrddddrdddrrrrulllurrulluluurrddluuuuruuurrrddlrrrddduuuuuuuldddluuullldrrlldlddldlllllurrrrurllurlllldrruulurrrrlld", "image": "human_images/human_config3_attempt0038.svg", "image_href": "../../human_images/human_config3_attempt0038.svg"}, {"id": 13, "index": 60, "source": "human", "source_id": "human-60", "user": "gi4o94", "config_id": 3, "config_label": "config 3", "size": 14, "seed": 3, "moves": 206, "overlaps": 47, "open_cells": 160, "end_row": 9, "end_col": 13, "path": "ddddddruuuuuurdddddddruuuuuuurdddddddddddddlllluuurddruurdddrruuuuuuuuuuuluurrllddrdrddddddddddruuuuuuuuuuuruurrrrrdlllldldddddddddddrlruuuuuuuluuuuudrrrrrdlldlrrrddduuuuulllllddddddrrrllddrdddruuddrudruuuu", "image": "human_images/human_config3_attempt0060.svg", "image_href": "../../human_images/human_config3_attempt0060.svg"}], "strategies": [{"key": "visit_order_svd__kmeans__k7", "label": "visit_order_svd + kmeans (k=7)", "embedding": "visit_order_svd", "algorithm": "kmeans", "n_clusters": 7, "silhouette": 0.3135, "davies_bouldin": 0.5467, "selected": true, "feature_type": "visit_order_svd", "svd_components": 8, "clusters": [{"cluster_id": 0, "color": "#2563eb", "size": 4, "hint": "motif=lldrr, end=(7,13)", "avg_moves": 173.75, "avg_overlaps": 14.75, "avg_turn_rate": 0.4747, "source_counts": {"human": 4}, "centroid_x": 690.35, "centroid_y": 587.24, "top_motifs": [{"motif": "lldrr", "count": 17, "lift": 1.7633}, {"motif": "rrdll", "count": 14, "lift": 1.6942}, {"motif": "llldr", "count": 13, "lift": 1.5731}], "top_end_positions": [{"end_row": 7, "end_col": 13, "count": 3}, {"end_row": 1, "end_col": 12, "count": 1}]}, {"cluster_id": 1, "color": "#dc2626", "size": 3, "hint": "motif=rrrru, end=(0,6)", "avg_moves": 173.67, "avg_overlaps": 14.67, "avg_turn_rate": 0.391, "source_counts": {"human": 3}, "centroid_x": 828.51, "centroid_y": 396.81, "top_motifs": [{"motif": "rrrru", "count": 11, "lift": 2.2196}, {"motif": "lurrr", "count": 9, "lift": 2.1793}, {"motif": "llllu", "count": 13, "lift": 2.1709}], "top_end_positions": [{"end_row": 0, "end_col": 6, "count": 1}, {"end_row": 2, "end_col": 11, "count": 1}, {"end_row": 7, "end_col": 13, "count": 1}]}, {"cluster_id": 2, "color": "#16a34a", "size": 2, "hint": "motif=uuuuu, end=(9,13)", "avg_moves": 178.0, "avg_overlaps": 19.0, "avg_turn_rate": 0.4574, "source_counts": {"human": 2}, "centroid_x": 483.72, "centroid_y": 710.23, "top_motifs": [{"motif": "uuuuu", "count": 22, "lift": 2.5134}, {"motif": "lllld", "count": 8, "lift": 1.5315}, {"motif": "ddddd", "count": 18, "lift": 1.4655}], "top_end_positions": [{"end_row": 9, "end_col": 13, "count": 2}]}, {"cluster_id": 3, "color": "#d97706", "size": 2, "hint": "motif=lllll, end=(5,1)", "avg_moves": 179.5, "avg_overlaps": 20.5, "avg_turn_rate": 0.3783, "source_counts": {"human": 2}, "centroid_x": 160.32, "centroid_y": 289.07, "top_motifs": [{"motif": "lllll", "count": 30, "lift": 2.1498}, {"motif": "urrrr", "count": 8, "lift": 1.9373}, {"motif": "rrrrr", "count": 26, "lift": 1.3938}], "top_end_positions": [{"end_row": 5, "end_col": 1, "count": 1}, {"end_row": 6, "end_col": 7, "count": 1}]}, {"cluster_id": 4, "color": "#7c3aed", "size": 1, "hint": "motif=ddddd, end=(8,11)", "avg_moves": 189.0, "avg_overlaps": 30.0, "avg_turn_rate": 0.3085, "source_counts": {"human": 1}, "centroid_x": 684.87, "centroid_y": 450.71, "top_motifs": [{"motif": "ddddd", "count": 10, "lift": 1.5315}, {"motif": "rrrrr", "count": 14, "lift": 1.424}, {"motif": "lllll", "count": 9, "lift": 1.2237}], "top_end_positions": [{"end_row": 8, "end_col": 11, "count": 1}]}, {"cluster_id": 5, "color": "#0891b2", "size": 1, "hint": "motif=uuuuu, end=(9,13)", "avg_moves": 206.0, "avg_overlaps": 47.0, "avg_turn_rate": 0.3268, "source_counts": {"human": 1}, "centroid_x": 617.81, "centroid_y": 796.21, "top_motifs": [{"motif": "uuuuu", "count": 24, "lift": 4.7237}, {"motif": "ddddd", "count": 29, "lift": 4.0677}], "top_end_positions": [{"end_row": 9, "end_col": 13, "count": 1}]}, {"cluster_id": 6, "color": "#db2777", "size": 1, "hint": "motif=, end=(1,4)", "avg_moves": 195.0, "avg_overlaps": 36.0, "avg_turn_rate": 0.4485, "source_counts": {"human": 1}, "centroid_x": 870.72, "centroid_y": 187.1, "top_motifs": [], "top_end_positions": [{"end_row": 1, "end_col": 4, "count": 1}]}], "points": [{"id": 0, "cluster": 0, "cluster_distance": 2.3048, "cluster_rank": 1, "projection_x": 2.10868, "projection_y": -3.35763, "screen_x": 677.99, "screen_y": 586.42, "color": "#2563eb"}, {"id": 1, "cluster": 0, "cluster_distance": 3.6162, "cluster_rank": 2, "projection_x": 2.53924, "projection_y": -4.10475, "screen_x": 689.42, "screen_y": 606.09, "color": "#2563eb"}, {"id": 2, "cluster": 0, "cluster_distance": 4.7193, "cluster_rank": 3, "projection_x": 3.04842, "projection_y": -1.40879, "screen_x": 702.93, "screen_y": 535.1, "color": "#2563eb"}, {"id": 3, "cluster": 0, "cluster_distance": 8.3809, "cluster_rank": 4, "projection_x": 2.60184, "projection_y": -4.68343, "screen_x": 691.08, "screen_y": 621.33, "color": "#2563eb"}, {"id": 4, "cluster": 1, "cluster_distance": 3.5005, "cluster_rank": 1, "projection_x": 6.57821, "projection_y": 4.23415, "screen_x": 796.61, "screen_y": 386.5, "color": "#dc2626"}, {"id": 5, "cluster": 1, "cluster_distance": 5.358, "cluster_rank": 2, "projection_x": 10.44826, "projection_y": 6.25638, "screen_x": 899.31, "screen_y": 333.24, "color": "#dc2626"}, {"id": 6, "cluster": 1, "cluster_distance": 7.1571, "cluster_rank": 3, "projection_x": 6.31482, "projection_y": 1.03736, "screen_x": 789.62, "screen_y": 470.68, "color": "#dc2626"}, {"id": 7, "cluster": 3, "cluster_distance": 9.6733, "cluster_rank": 2, "projection_x": -16.65822, "projection_y": 14.20997, "screen_x": 179.95, "screen_y": 123.79, "color": "#d97706"}, {"id": 8, "cluster": 3, "cluster_distance": 9.6733, "cluster_rank": 1, "projection_x": -18.13749, "projection_y": 1.65787, "screen_x": 140.69, "screen_y": 454.34, "color": "#d97706"}, {"id": 9, "cluster": 2, "cluster_distance": 3.5147, "cluster_rank": 1, "projection_x": -7.33268, "projection_y": -8.13052, "screen_x": 427.43, "screen_y": 712.11, "color": "#16a34a"}, {"id": 10, "cluster": 2, "cluster_distance": 3.5147, "cluster_rank": 2, "projection_x": -3.09095, "projection_y": -7.98809, "screen_x": 540.0, "screen_y": 708.36, "color": "#16a34a"}, {"id": 11, "cluster": 4, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 2.36778, "projection_y": 1.79569, "screen_x": 684.87, "screen_y": 450.71, "color": "#7c3aed"}, {"id": 12, "cluster": 6, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 9.37101, "projection_y": 11.80583, "screen_x": 870.72, "screen_y": 187.1, "color": "#db2777"}, {"id": 13, "cluster": 5, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": -0.15893, "projection_y": -11.32406, "screen_x": 617.81, "screen_y": 796.21, "color": "#0891b2"}]}, {"key": "visit_order_svd__agglomerative__k7", "label": "visit_order_svd + agglomerative (k=7)", "embedding": "visit_order_svd", "algorithm": "agglomerative", "n_clusters": 7, "silhouette": 0.3135, "davies_bouldin": 0.5467, "selected": false, "feature_type": "visit_order_svd", "svd_components": 8, "clusters": [{"cluster_id": 0, "color": "#2563eb", "size": 4, "hint": "motif=lldrr, end=(7,13)", "avg_moves": 173.75, "avg_overlaps": 14.75, "avg_turn_rate": 0.4747, "source_counts": {"human": 4}, "centroid_x": 690.35, "centroid_y": 587.24, "top_motifs": [{"motif": "lldrr", "count": 17, "lift": 1.7633}, {"motif": "rrdll", "count": 14, "lift": 1.6942}, {"motif": "llldr", "count": 13, "lift": 1.5731}], "top_end_positions": [{"end_row": 7, "end_col": 13, "count": 3}, {"end_row": 1, "end_col": 12, "count": 1}]}, {"cluster_id": 1, "color": "#dc2626", "size": 3, "hint": "motif=rrrru, end=(0,6)", "avg_moves": 173.67, "avg_overlaps": 14.67, "avg_turn_rate": 0.391, "source_counts": {"human": 3}, "centroid_x": 828.51, "centroid_y": 396.81, "top_motifs": [{"motif": "rrrru", "count": 11, "lift": 2.2196}, {"motif": "lurrr", "count": 9, "lift": 2.1793}, {"motif": "llllu", "count": 13, "lift": 2.1709}], "top_end_positions": [{"end_row": 0, "end_col": 6, "count": 1}, {"end_row": 2, "end_col": 11, "count": 1}, {"end_row": 7, "end_col": 13, "count": 1}]}, {"cluster_id": 2, "color": "#16a34a", "size": 2, "hint": "motif=lllll, end=(5,1)", "avg_moves": 179.5, "avg_overlaps": 20.5, "avg_turn_rate": 0.3783, "source_counts": {"human": 2}, "centroid_x": 160.32, "centroid_y": 289.07, "top_motifs": [{"motif": "lllll", "count": 30, "lift": 2.1498}, {"motif": "urrrr", "count": 8, "lift": 1.9373}, {"motif": "rrrrr", "count": 26, "lift": 1.3938}], "top_end_positions": [{"end_row": 5, "end_col": 1, "count": 1}, {"end_row": 6, "end_col": 7, "count": 1}]}, {"cluster_id": 3, "color": "#d97706", "size": 2, "hint": "motif=uuuuu, end=(9,13)", "avg_moves": 178.0, "avg_overlaps": 19.0, "avg_turn_rate": 0.4574, "source_counts": {"human": 2}, "centroid_x": 483.72, "centroid_y": 710.23, "top_motifs": [{"motif": "uuuuu", "count": 22, "lift": 2.5134}, {"motif": "lllld", "count": 8, "lift": 1.5315}, {"motif": "ddddd", "count": 18, "lift": 1.4655}], "top_end_positions": [{"end_row": 9, "end_col": 13, "count": 2}]}, {"cluster_id": 4, "color": "#7c3aed", "size": 1, "hint": "motif=, end=(1,4)", "avg_moves": 195.0, "avg_overlaps": 36.0, "avg_turn_rate": 0.4485, "source_counts": {"human": 1}, "centroid_x": 870.72, "centroid_y": 187.1, "top_motifs": [], "top_end_positions": [{"end_row": 1, "end_col": 4, "count": 1}]}, {"cluster_id": 5, "color": "#0891b2", "size": 1, "hint": "motif=ddddd, end=(8,11)", "avg_moves": 189.0, "avg_overlaps": 30.0, "avg_turn_rate": 0.3085, "source_counts": {"human": 1}, "centroid_x": 684.87, "centroid_y": 450.71, "top_motifs": [{"motif": "ddddd", "count": 10, "lift": 1.5315}, {"motif": "rrrrr", "count": 14, "lift": 1.424}, {"motif": "lllll", "count": 9, "lift": 1.2237}], "top_end_positions": [{"end_row": 8, "end_col": 11, "count": 1}]}, {"cluster_id": 6, "color": "#db2777", "size": 1, "hint": "motif=uuuuu, end=(9,13)", "avg_moves": 206.0, "avg_overlaps": 47.0, "avg_turn_rate": 0.3268, "source_counts": {"human": 1}, "centroid_x": 617.81, "centroid_y": 796.21, "top_motifs": [{"motif": "uuuuu", "count": 24, "lift": 4.7237}, {"motif": "ddddd", "count": 29, "lift": 4.0677}], "top_end_positions": [{"end_row": 9, "end_col": 13, "count": 1}]}], "points": [{"id": 0, "cluster": 0, "cluster_distance": 2.3048, "cluster_rank": 1, "projection_x": 2.10868, "projection_y": -3.35763, "screen_x": 677.99, "screen_y": 586.42, "color": "#2563eb"}, {"id": 1, "cluster": 0, "cluster_distance": 3.6162, "cluster_rank": 2, "projection_x": 2.53924, "projection_y": -4.10475, "screen_x": 689.42, "screen_y": 606.09, "color": "#2563eb"}, {"id": 2, "cluster": 0, "cluster_distance": 4.7193, "cluster_rank": 3, "projection_x": 3.04842, "projection_y": -1.40879, "screen_x": 702.93, "screen_y": 535.1, "color": "#2563eb"}, {"id": 3, "cluster": 0, "cluster_distance": 8.3809, "cluster_rank": 4, "projection_x": 2.60184, "projection_y": -4.68343, "screen_x": 691.08, "screen_y": 621.33, "color": "#2563eb"}, {"id": 4, "cluster": 1, "cluster_distance": 3.5005, "cluster_rank": 1, "projection_x": 6.57821, "projection_y": 4.23415, "screen_x": 796.61, "screen_y": 386.5, "color": "#dc2626"}, {"id": 5, "cluster": 1, "cluster_distance": 5.358, "cluster_rank": 2, "projection_x": 10.44826, "projection_y": 6.25638, "screen_x": 899.31, "screen_y": 333.24, "color": "#dc2626"}, {"id": 6, "cluster": 1, "cluster_distance": 7.1571, "cluster_rank": 3, "projection_x": 6.31482, "projection_y": 1.03736, "screen_x": 789.62, "screen_y": 470.68, "color": "#dc2626"}, {"id": 7, "cluster": 2, "cluster_distance": 9.6733, "cluster_rank": 1, "projection_x": -16.65822, "projection_y": 14.20997, "screen_x": 179.95, "screen_y": 123.79, "color": "#16a34a"}, {"id": 8, "cluster": 2, "cluster_distance": 9.6733, "cluster_rank": 2, "projection_x": -18.13749, "projection_y": 1.65787, "screen_x": 140.69, "screen_y": 454.34, "color": "#16a34a"}, {"id": 9, "cluster": 3, "cluster_distance": 3.5147, "cluster_rank": 1, "projection_x": -7.33268, "projection_y": -8.13052, "screen_x": 427.43, "screen_y": 712.11, "color": "#d97706"}, {"id": 10, "cluster": 3, "cluster_distance": 3.5147, "cluster_rank": 2, "projection_x": -3.09095, "projection_y": -7.98809, "screen_x": 540.0, "screen_y": 708.36, "color": "#d97706"}, {"id": 11, "cluster": 5, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 2.36778, "projection_y": 1.79569, "screen_x": 684.87, "screen_y": 450.71, "color": "#0891b2"}, {"id": 12, "cluster": 4, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 9.37101, "projection_y": 11.80583, "screen_x": 870.72, "screen_y": 187.1, "color": "#7c3aed"}, {"id": 13, "cluster": 6, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": -0.15893, "projection_y": -11.32406, "screen_x": 617.81, "screen_y": 796.21, "color": "#db2777"}]}, {"key": "visit_order_svd__kmeans__k8", "label": "visit_order_svd + kmeans (k=8)", "embedding": "visit_order_svd", "algorithm": "kmeans", "n_clusters": 8, "silhouette": 0.2874, "davies_bouldin": 0.4199, "selected": false, "feature_type": "visit_order_svd", "svd_components": 8, "clusters": [{"cluster_id": 0, "color": "#2563eb", "size": 4, "hint": "motif=lldrr, end=(7,13)", "avg_moves": 173.75, "avg_overlaps": 14.75, "avg_turn_rate": 0.4747, "source_counts": {"human": 4}, "centroid_x": 690.35, "centroid_y": 587.24, "top_motifs": [{"motif": "lldrr", "count": 17, "lift": 1.7633}, {"motif": "rrdll", "count": 14, "lift": 1.6942}, {"motif": "llldr", "count": 13, "lift": 1.5731}], "top_end_positions": [{"end_row": 7, "end_col": 13, "count": 3}, {"end_row": 1, "end_col": 12, "count": 1}]}, {"cluster_id": 1, "color": "#dc2626", "size": 3, "hint": "motif=rrrru, end=(0,6)", "avg_moves": 173.67, "avg_overlaps": 14.67, "avg_turn_rate": 0.391, "source_counts": {"human": 3}, "centroid_x": 828.51, "centroid_y": 396.81, "top_motifs": [{"motif": "rrrru", "count": 11, "lift": 2.2196}, {"motif": "lurrr", "count": 9, "lift": 2.1793}, {"motif": "llllu", "count": 13, "lift": 2.1709}], "top_end_positions": [{"end_row": 0, "end_col": 6, "count": 1}, {"end_row": 2, "end_col": 11, "count": 1}, {"end_row": 7, "end_col": 13, "count": 1}]}, {"cluster_id": 2, "color": "#16a34a", "size": 2, "hint": "motif=uuuuu, end=(9,13)", "avg_moves": 178.0, "avg_overlaps": 19.0, "avg_turn_rate": 0.4574, "source_counts": {"human": 2}, "centroid_x": 483.72, "centroid_y": 710.23, "top_motifs": [{"motif": "uuuuu", "count": 22, "lift": 2.5134}, {"motif": "lllld", "count": 8, "lift": 1.5315}, {"motif": "ddddd", "count": 18, "lift": 1.4655}], "top_end_positions": [{"end_row": 9, "end_col": 13, "count": 2}]}, {"cluster_id": 3, "color": "#d97706", "size": 1, "hint": "motif=ddddd, end=(8,11)", "avg_moves": 189.0, "avg_overlaps": 30.0, "avg_turn_rate": 0.3085, "source_counts": {"human": 1}, "centroid_x": 684.87, "centroid_y": 450.71, "top_motifs": [{"motif": "ddddd", "count": 10, "lift": 1.5315}, {"motif": "rrrrr", "count": 14, "lift": 1.424}, {"motif": "lllll", "count": 9, "lift": 1.2237}], "top_end_positions": [{"end_row": 8, "end_col": 11, "count": 1}]}, {"cluster_id": 4, "color": "#7c3aed", "size": 1, "hint": "motif=lllll, end=(5,1)", "avg_moves": 182.0, "avg_overlaps": 23.0, "avg_turn_rate": 0.3702, "source_counts": {"human": 1}, "centroid_x": 179.95, "centroid_y": 123.79, "top_motifs": [{"motif": "lllll", "count": 15, "lift": 2.1196}, {"motif": "rrrrr", "count": 13, "lift": 1.3743}], "top_end_positions": [{"end_row": 5, "end_col": 1, "count": 1}]}, {"cluster_id": 5, "color": "#0891b2", "size": 1, "hint": "motif=, end=(1,4)", "avg_moves": 195.0, "avg_overlaps": 36.0, "avg_turn_rate": 0.4485, "source_counts": {"human": 1}, "centroid_x": 870.72, "centroid_y": 187.1, "top_motifs": [], "top_end_positions": [{"end_row": 1, "end_col": 4, "count": 1}]}, {"cluster_id": 6, "color": "#db2777", "size": 1, "hint": "motif=lllll, end=(6,7)", "avg_moves": 177.0, "avg_overlaps": 18.0, "avg_turn_rate": 0.3864, "source_counts": {"human": 1}, "centroid_x": 140.69, "centroid_y": 454.34, "top_motifs": [{"motif": "lllll", "count": 15, "lift": 2.1809}, {"motif": "rrrrr", "count": 13, "lift": 1.414}], "top_end_positions": [{"end_row": 6, "end_col": 7, "count": 1}]}, {"cluster_id": 7, "color": "#4f46e5", "size": 1, "hint": "motif=uuuuu, end=(9,13)", "avg_moves": 206.0, "avg_overlaps": 47.0, "avg_turn_rate": 0.3268, "source_counts": {"human": 1}, "centroid_x": 617.81, "centroid_y": 796.21, "top_motifs": [{"motif": "uuuuu", "count": 24, "lift": 4.7237}, {"motif": "ddddd", "count": 29, "lift": 4.0677}], "top_end_positions": [{"end_row": 9, "end_col": 13, "count": 1}]}], "points": [{"id": 0, "cluster": 0, "cluster_distance": 2.3048, "cluster_rank": 1, "projection_x": 2.10868, "projection_y": -3.35763, "screen_x": 677.99, "screen_y": 586.42, "color": "#2563eb"}, {"id": 1, "cluster": 0, "cluster_distance": 3.6162, "cluster_rank": 2, "projection_x": 2.53924, "projection_y": -4.10475, "screen_x": 689.42, "screen_y": 606.09, "color": "#2563eb"}, {"id": 2, "cluster": 0, "cluster_distance": 4.7193, "cluster_rank": 3, "projection_x": 3.04842, "projection_y": -1.40879, "screen_x": 702.93, "screen_y": 535.1, "color": "#2563eb"}, {"id": 3, "cluster": 0, "cluster_distance": 8.3809, "cluster_rank": 4, "projection_x": 2.60184, "projection_y": -4.68343, "screen_x": 691.08, "screen_y": 621.33, "color": "#2563eb"}, {"id": 4, "cluster": 1, "cluster_distance": 3.5005, "cluster_rank": 1, "projection_x": 6.57821, "projection_y": 4.23415, "screen_x": 796.61, "screen_y": 386.5, "color": "#dc2626"}, {"id": 5, "cluster": 1, "cluster_distance": 5.358, "cluster_rank": 2, "projection_x": 10.44826, "projection_y": 6.25638, "screen_x": 899.31, "screen_y": 333.24, "color": "#dc2626"}, {"id": 6, "cluster": 1, "cluster_distance": 7.1571, "cluster_rank": 3, "projection_x": 6.31482, "projection_y": 1.03736, "screen_x": 789.62, "screen_y": 470.68, "color": "#dc2626"}, {"id": 7, "cluster": 4, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": -16.65822, "projection_y": 14.20997, "screen_x": 179.95, "screen_y": 123.79, "color": "#7c3aed"}, {"id": 8, "cluster": 6, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": -18.13749, "projection_y": 1.65787, "screen_x": 140.69, "screen_y": 454.34, "color": "#db2777"}, {"id": 9, "cluster": 2, "cluster_distance": 3.5147, "cluster_rank": 1, "projection_x": -7.33268, "projection_y": -8.13052, "screen_x": 427.43, "screen_y": 712.11, "color": "#16a34a"}, {"id": 10, "cluster": 2, "cluster_distance": 3.5147, "cluster_rank": 2, "projection_x": -3.09095, "projection_y": -7.98809, "screen_x": 540.0, "screen_y": 708.36, "color": "#16a34a"}, {"id": 11, "cluster": 3, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 2.36778, "projection_y": 1.79569, "screen_x": 684.87, "screen_y": 450.71, "color": "#d97706"}, {"id": 12, "cluster": 5, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 9.37101, "projection_y": 11.80583, "screen_x": 870.72, "screen_y": 187.1, "color": "#0891b2"}, {"id": 13, "cluster": 7, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": -0.15893, "projection_y": -11.32406, "screen_x": 617.81, "screen_y": 796.21, "color": "#4f46e5"}]}, {"key": "visit_order_svd__agglomerative__k8", "label": "visit_order_svd + agglomerative (k=8)", "embedding": "visit_order_svd", "algorithm": "agglomerative", "n_clusters": 8, "silhouette": 0.2874, "davies_bouldin": 0.4199, "selected": false, "feature_type": "visit_order_svd", "svd_components": 8, "clusters": [{"cluster_id": 0, "color": "#2563eb", "size": 4, "hint": "motif=lldrr, end=(7,13)", "avg_moves": 173.75, "avg_overlaps": 14.75, "avg_turn_rate": 0.4747, "source_counts": {"human": 4}, "centroid_x": 690.35, "centroid_y": 587.24, "top_motifs": [{"motif": "lldrr", "count": 17, "lift": 1.7633}, {"motif": "rrdll", "count": 14, "lift": 1.6942}, {"motif": "llldr", "count": 13, "lift": 1.5731}], "top_end_positions": [{"end_row": 7, "end_col": 13, "count": 3}, {"end_row": 1, "end_col": 12, "count": 1}]}, {"cluster_id": 1, "color": "#dc2626", "size": 3, "hint": "motif=rrrru, end=(0,6)", "avg_moves": 173.67, "avg_overlaps": 14.67, "avg_turn_rate": 0.391, "source_counts": {"human": 3}, "centroid_x": 828.51, "centroid_y": 396.81, "top_motifs": [{"motif": "rrrru", "count": 11, "lift": 2.2196}, {"motif": "lurrr", "count": 9, "lift": 2.1793}, {"motif": "llllu", "count": 13, "lift": 2.1709}], "top_end_positions": [{"end_row": 0, "end_col": 6, "count": 1}, {"end_row": 2, "end_col": 11, "count": 1}, {"end_row": 7, "end_col": 13, "count": 1}]}, {"cluster_id": 2, "color": "#16a34a", "size": 2, "hint": "motif=uuuuu, end=(9,13)", "avg_moves": 178.0, "avg_overlaps": 19.0, "avg_turn_rate": 0.4574, "source_counts": {"human": 2}, "centroid_x": 483.72, "centroid_y": 710.23, "top_motifs": [{"motif": "uuuuu", "count": 22, "lift": 2.5134}, {"motif": "lllld", "count": 8, "lift": 1.5315}, {"motif": "ddddd", "count": 18, "lift": 1.4655}], "top_end_positions": [{"end_row": 9, "end_col": 13, "count": 2}]}, {"cluster_id": 3, "color": "#d97706", "size": 1, "hint": "motif=, end=(1,4)", "avg_moves": 195.0, "avg_overlaps": 36.0, "avg_turn_rate": 0.4485, "source_counts": {"human": 1}, "centroid_x": 870.72, "centroid_y": 187.1, "top_motifs": [], "top_end_positions": [{"end_row": 1, "end_col": 4, "count": 1}]}, {"cluster_id": 4, "color": "#7c3aed", "size": 1, "hint": "motif=ddddd, end=(8,11)", "avg_moves": 189.0, "avg_overlaps": 30.0, "avg_turn_rate": 0.3085, "source_counts": {"human": 1}, "centroid_x": 684.87, "centroid_y": 450.71, "top_motifs": [{"motif": "ddddd", "count": 10, "lift": 1.5315}, {"motif": "rrrrr", "count": 14, "lift": 1.424}, {"motif": "lllll", "count": 9, "lift": 1.2237}], "top_end_positions": [{"end_row": 8, "end_col": 11, "count": 1}]}, {"cluster_id": 5, "color": "#0891b2", "size": 1, "hint": "motif=lllll, end=(6,7)", "avg_moves": 177.0, "avg_overlaps": 18.0, "avg_turn_rate": 0.3864, "source_counts": {"human": 1}, "centroid_x": 140.69, "centroid_y": 454.34, "top_motifs": [{"motif": "lllll", "count": 15, "lift": 2.1809}, {"motif": "rrrrr", "count": 13, "lift": 1.414}], "top_end_positions": [{"end_row": 6, "end_col": 7, "count": 1}]}, {"cluster_id": 6, "color": "#db2777", "size": 1, "hint": "motif=uuuuu, end=(9,13)", "avg_moves": 206.0, "avg_overlaps": 47.0, "avg_turn_rate": 0.3268, "source_counts": {"human": 1}, "centroid_x": 617.81, "centroid_y": 796.21, "top_motifs": [{"motif": "uuuuu", "count": 24, "lift": 4.7237}, {"motif": "ddddd", "count": 29, "lift": 4.0677}], "top_end_positions": [{"end_row": 9, "end_col": 13, "count": 1}]}, {"cluster_id": 7, "color": "#4f46e5", "size": 1, "hint": "motif=lllll, end=(5,1)", "avg_moves": 182.0, "avg_overlaps": 23.0, "avg_turn_rate": 0.3702, "source_counts": {"human": 1}, "centroid_x": 179.95, "centroid_y": 123.79, "top_motifs": [{"motif": "lllll", "count": 15, "lift": 2.1196}, {"motif": "rrrrr", "count": 13, "lift": 1.3743}], "top_end_positions": [{"end_row": 5, "end_col": 1, "count": 1}]}], "points": [{"id": 0, "cluster": 0, "cluster_distance": 2.3048, "cluster_rank": 1, "projection_x": 2.10868, "projection_y": -3.35763, "screen_x": 677.99, "screen_y": 586.42, "color": "#2563eb"}, {"id": 1, "cluster": 0, "cluster_distance": 3.6162, "cluster_rank": 2, "projection_x": 2.53924, "projection_y": -4.10475, "screen_x": 689.42, "screen_y": 606.09, "color": "#2563eb"}, {"id": 2, "cluster": 0, "cluster_distance": 4.7193, "cluster_rank": 3, "projection_x": 3.04842, "projection_y": -1.40879, "screen_x": 702.93, "screen_y": 535.1, "color": "#2563eb"}, {"id": 3, "cluster": 0, "cluster_distance": 8.3809, "cluster_rank": 4, "projection_x": 2.60184, "projection_y": -4.68343, "screen_x": 691.08, "screen_y": 621.33, "color": "#2563eb"}, {"id": 4, "cluster": 1, "cluster_distance": 3.5005, "cluster_rank": 1, "projection_x": 6.57821, "projection_y": 4.23415, "screen_x": 796.61, "screen_y": 386.5, "color": "#dc2626"}, {"id": 5, "cluster": 1, "cluster_distance": 5.358, "cluster_rank": 2, "projection_x": 10.44826, "projection_y": 6.25638, "screen_x": 899.31, "screen_y": 333.24, "color": "#dc2626"}, {"id": 6, "cluster": 1, "cluster_distance": 7.1571, "cluster_rank": 3, "projection_x": 6.31482, "projection_y": 1.03736, "screen_x": 789.62, "screen_y": 470.68, "color": "#dc2626"}, {"id": 7, "cluster": 7, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": -16.65822, "projection_y": 14.20997, "screen_x": 179.95, "screen_y": 123.79, "color": "#4f46e5"}, {"id": 8, "cluster": 5, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": -18.13749, "projection_y": 1.65787, "screen_x": 140.69, "screen_y": 454.34, "color": "#0891b2"}, {"id": 9, "cluster": 2, "cluster_distance": 3.5147, "cluster_rank": 1, "projection_x": -7.33268, "projection_y": -8.13052, "screen_x": 427.43, "screen_y": 712.11, "color": "#16a34a"}, {"id": 10, "cluster": 2, "cluster_distance": 3.5147, "cluster_rank": 2, "projection_x": -3.09095, "projection_y": -7.98809, "screen_x": 540.0, "screen_y": 708.36, "color": "#16a34a"}, {"id": 11, "cluster": 4, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 2.36778, "projection_y": 1.79569, "screen_x": 684.87, "screen_y": 450.71, "color": "#7c3aed"}, {"id": 12, "cluster": 3, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 9.37101, "projection_y": 11.80583, "screen_x": 870.72, "screen_y": 187.1, "color": "#d97706"}, {"id": 13, "cluster": 6, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": -0.15893, "projection_y": -11.32406, "screen_x": 617.81, "screen_y": 796.21, "color": "#db2777"}]}, {"key": "visit_order_svd__kmeans__k5", "label": "visit_order_svd + kmeans (k=5)", "embedding": "visit_order_svd", "algorithm": "kmeans", "n_clusters": 5, "silhouette": 0.2806, "davies_bouldin": 0.7336, "selected": false, "feature_type": "visit_order_svd", "svd_components": 8, "clusters": [{"cluster_id": 0, "color": "#2563eb", "size": 7, "hint": "motif=urddr, end=(7,13)", "avg_moves": 173.71, "avg_overlaps": 14.71, "avg_turn_rate": 0.4388, "source_counts": {"human": 7}, "centroid_x": 749.56, "centroid_y": 505.62, "top_motifs": [{"motif": "urddr", "count": 9, "lift": 1.5562}, {"motif": "llurr", "count": 20, "lift": 1.537}, {"motif": "lllur", "count": 18, "lift": 1.4939}], "top_end_positions": [{"end_row": 7, "end_col": 13, "count": 4}, {"end_row": 0, "end_col": 6, "count": 1}, {"end_row": 1, "end_col": 12, "count": 1}]}, {"cluster_id": 1, "color": "#dc2626", "size": 3, "hint": "motif=uuuuu, end=(9,13)", "avg_moves": 187.33, "avg_overlaps": 28.33, "avg_turn_rate": 0.4139, "source_counts": {"human": 3}, "centroid_x": 528.42, "centroid_y": 738.89, "top_motifs": [{"motif": "uuuuu", "count": 46, "lift": 3.3252}, {"motif": "druuu", "count": 10, "lift": 2.6364}, {"motif": "dddru", "count": 9, "lift": 2.521}], "top_end_positions": [{"end_row": 9, "end_col": 13, "count": 3}]}, {"cluster_id": 2, "color": "#16a34a", "size": 2, "hint": "motif=lllll, end=(5,1)", "avg_moves": 179.5, "avg_overlaps": 20.5, "avg_turn_rate": 0.3783, "source_counts": {"human": 2}, "centroid_x": 160.32, "centroid_y": 289.07, "top_motifs": [{"motif": "lllll", "count": 30, "lift": 2.1498}, {"motif": "urrrr", "count": 8, "lift": 1.9373}, {"motif": "rrrrr", "count": 26, "lift": 1.3938}], "top_end_positions": [{"end_row": 5, "end_col": 1, "count": 1}, {"end_row": 6, "end_col": 7, "count": 1}]}, {"cluster_id": 3, "color": "#d97706", "size": 1, "hint": "motif=ddddd, end=(8,11)", "avg_moves": 189.0, "avg_overlaps": 30.0, "avg_turn_rate": 0.3085, "source_counts": {"human": 1}, "centroid_x": 684.87, "centroid_y": 450.71, "top_motifs": [{"motif": "ddddd", "count": 10, "lift": 1.5315}, {"motif": "rrrrr", "count": 14, "lift": 1.424}, {"motif": "lllll", "count": 9, "lift": 1.2237}], "top_end_positions": [{"end_row": 8, "end_col": 11, "count": 1}]}, {"cluster_id": 4, "color": "#7c3aed", "size": 1, "hint": "motif=, end=(1,4)", "avg_moves": 195.0, "avg_overlaps": 36.0, "avg_turn_rate": 0.4485, "source_counts": {"human": 1}, "centroid_x": 870.72, "centroid_y": 187.1, "top_motifs": [], "top_end_positions": [{"end_row": 1, "end_col": 4, "count": 1}]}], "points": [{"id": 0, "cluster": 0, "cluster_distance": 5.4966, "cluster_rank": 1, "projection_x": 2.10868, "projection_y": -3.35763, "screen_x": 677.99, "screen_y": 586.42, "color": "#2563eb"}, {"id": 1, "cluster": 0, "cluster_distance": 7.2887, "cluster_rank": 4, "projection_x": 2.53924, "projection_y": -4.10475, "screen_x": 689.42, "screen_y": 606.09, "color": "#2563eb"}, {"id": 2, "cluster": 0, "cluster_distance": 5.8068, "cluster_rank": 3, "projection_x": 3.04842, "projection_y": -1.40879, "screen_x": 702.93, "screen_y": 535.1, "color": "#2563eb"}, {"id": 3, "cluster": 0, "cluster_distance": 10.2248, "cluster_rank": 6, "projection_x": 2.60184, "projection_y": -4.68343, "screen_x": 691.08, "screen_y": 621.33, "color": "#2563eb"}, {"id": 4, "cluster": 0, "cluster_distance": 5.7264, "cluster_rank": 2, "projection_x": 6.57821, "projection_y": 4.23415, "screen_x": 796.61, "screen_y": 386.5, "color": "#2563eb"}, {"id": 5, "cluster": 0, "cluster_distance": 10.4206, "cluster_rank": 7, "projection_x": 10.44826, "projection_y": 6.25638, "screen_x": 899.31, "screen_y": 333.24, "color": "#2563eb"}, {"id": 6, "cluster": 0, "cluster_distance": 9.9201, "cluster_rank": 5, "projection_x": 6.31482, "projection_y": 1.03736, "screen_x": 789.62, "screen_y": 470.68, "color": "#2563eb"}, {"id": 7, "cluster": 2, "cluster_distance": 9.6733, "cluster_rank": 2, "projection_x": -16.65822, "projection_y": 14.20997, "screen_x": 179.95, "screen_y": 123.79, "color": "#16a34a"}, {"id": 8, "cluster": 2, "cluster_distance": 9.6733, "cluster_rank": 1, "projection_x": -18.13749, "projection_y": 1.65787, "screen_x": 140.69, "screen_y": 454.34, "color": "#16a34a"}, {"id": 9, "cluster": 1, "cluster_distance": 6.3747, "cluster_rank": 1, "projection_x": -7.33268, "projection_y": -8.13052, "screen_x": 427.43, "screen_y": 712.11, "color": "#dc2626"}, {"id": 10, "cluster": 1, "cluster_distance": 8.0662, "cluster_rank": 2, "projection_x": -3.09095, "projection_y": -7.98809, "screen_x": 540.0, "screen_y": 708.36, "color": "#dc2626"}, {"id": 11, "cluster": 3, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 2.36778, "projection_y": 1.79569, "screen_x": 684.87, "screen_y": 450.71, "color": "#d97706"}, {"id": 12, "cluster": 4, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 9.37101, "projection_y": 11.80583, "screen_x": 870.72, "screen_y": 187.1, "color": "#7c3aed"}, {"id": 13, "cluster": 1, "cluster_distance": 12.7275, "cluster_rank": 3, "projection_x": -0.15893, "projection_y": -11.32406, "screen_x": 617.81, "screen_y": 796.21, "color": "#dc2626"}]}, {"key": "visit_order_svd__agglomerative__k5", "label": "visit_order_svd + agglomerative (k=5)", "embedding": "visit_order_svd", "algorithm": "agglomerative", "n_clusters": 5, "silhouette": 0.2806, "davies_bouldin": 0.7336, "selected": false, "feature_type": "visit_order_svd", "svd_components": 8, "clusters": [{"cluster_id": 0, "color": "#2563eb", "size": 7, "hint": "motif=urddr, end=(7,13)", "avg_moves": 173.71, "avg_overlaps": 14.71, "avg_turn_rate": 0.4388, "source_counts": {"human": 7}, "centroid_x": 749.56, "centroid_y": 505.62, "top_motifs": [{"motif": "urddr", "count": 9, "lift": 1.5562}, {"motif": "llurr", "count": 20, "lift": 1.537}, {"motif": "lllur", "count": 18, "lift": 1.4939}], "top_end_positions": [{"end_row": 7, "end_col": 13, "count": 4}, {"end_row": 0, "end_col": 6, "count": 1}, {"end_row": 1, "end_col": 12, "count": 1}]}, {"cluster_id": 1, "color": "#dc2626", "size": 3, "hint": "motif=uuuuu, end=(9,13)", "avg_moves": 187.33, "avg_overlaps": 28.33, "avg_turn_rate": 0.4139, "source_counts": {"human": 3}, "centroid_x": 528.42, "centroid_y": 738.89, "top_motifs": [{"motif": "uuuuu", "count": 46, "lift": 3.3252}, {"motif": "druuu", "count": 10, "lift": 2.6364}, {"motif": "dddru", "count": 9, "lift": 2.521}], "top_end_positions": [{"end_row": 9, "end_col": 13, "count": 3}]}, {"cluster_id": 2, "color": "#16a34a", "size": 2, "hint": "motif=lllll, end=(5,1)", "avg_moves": 179.5, "avg_overlaps": 20.5, "avg_turn_rate": 0.3783, "source_counts": {"human": 2}, "centroid_x": 160.32, "centroid_y": 289.07, "top_motifs": [{"motif": "lllll", "count": 30, "lift": 2.1498}, {"motif": "urrrr", "count": 8, "lift": 1.9373}, {"motif": "rrrrr", "count": 26, "lift": 1.3938}], "top_end_positions": [{"end_row": 5, "end_col": 1, "count": 1}, {"end_row": 6, "end_col": 7, "count": 1}]}, {"cluster_id": 3, "color": "#d97706", "size": 1, "hint": "motif=, end=(1,4)", "avg_moves": 195.0, "avg_overlaps": 36.0, "avg_turn_rate": 0.4485, "source_counts": {"human": 1}, "centroid_x": 870.72, "centroid_y": 187.1, "top_motifs": [], "top_end_positions": [{"end_row": 1, "end_col": 4, "count": 1}]}, {"cluster_id": 4, "color": "#7c3aed", "size": 1, "hint": "motif=ddddd, end=(8,11)", "avg_moves": 189.0, "avg_overlaps": 30.0, "avg_turn_rate": 0.3085, "source_counts": {"human": 1}, "centroid_x": 684.87, "centroid_y": 450.71, "top_motifs": [{"motif": "ddddd", "count": 10, "lift": 1.5315}, {"motif": "rrrrr", "count": 14, "lift": 1.424}, {"motif": "lllll", "count": 9, "lift": 1.2237}], "top_end_positions": [{"end_row": 8, "end_col": 11, "count": 1}]}], "points": [{"id": 0, "cluster": 0, "cluster_distance": 5.4966, "cluster_rank": 1, "projection_x": 2.10868, "projection_y": -3.35763, "screen_x": 677.99, "screen_y": 586.42, "color": "#2563eb"}, {"id": 1, "cluster": 0, "cluster_distance": 7.2887, "cluster_rank": 4, "projection_x": 2.53924, "projection_y": -4.10475, "screen_x": 689.42, "screen_y": 606.09, "color": "#2563eb"}, {"id": 2, "cluster": 0, "cluster_distance": 5.8068, "cluster_rank": 3, "projection_x": 3.04842, "projection_y": -1.40879, "screen_x": 702.93, "screen_y": 535.1, "color": "#2563eb"}, {"id": 3, "cluster": 0, "cluster_distance": 10.2248, "cluster_rank": 6, "projection_x": 2.60184, "projection_y": -4.68343, "screen_x": 691.08, "screen_y": 621.33, "color": "#2563eb"}, {"id": 4, "cluster": 0, "cluster_distance": 5.7264, "cluster_rank": 2, "projection_x": 6.57821, "projection_y": 4.23415, "screen_x": 796.61, "screen_y": 386.5, "color": "#2563eb"}, {"id": 5, "cluster": 0, "cluster_distance": 10.4206, "cluster_rank": 7, "projection_x": 10.44826, "projection_y": 6.25638, "screen_x": 899.31, "screen_y": 333.24, "color": "#2563eb"}, {"id": 6, "cluster": 0, "cluster_distance": 9.9201, "cluster_rank": 5, "projection_x": 6.31482, "projection_y": 1.03736, "screen_x": 789.62, "screen_y": 470.68, "color": "#2563eb"}, {"id": 7, "cluster": 2, "cluster_distance": 9.6733, "cluster_rank": 1, "projection_x": -16.65822, "projection_y": 14.20997, "screen_x": 179.95, "screen_y": 123.79, "color": "#16a34a"}, {"id": 8, "cluster": 2, "cluster_distance": 9.6733, "cluster_rank": 2, "projection_x": -18.13749, "projection_y": 1.65787, "screen_x": 140.69, "screen_y": 454.34, "color": "#16a34a"}, {"id": 9, "cluster": 1, "cluster_distance": 6.3747, "cluster_rank": 1, "projection_x": -7.33268, "projection_y": -8.13052, "screen_x": 427.43, "screen_y": 712.11, "color": "#dc2626"}, {"id": 10, "cluster": 1, "cluster_distance": 8.0662, "cluster_rank": 2, "projection_x": -3.09095, "projection_y": -7.98809, "screen_x": 540.0, "screen_y": 708.36, "color": "#dc2626"}, {"id": 11, "cluster": 4, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 2.36778, "projection_y": 1.79569, "screen_x": 684.87, "screen_y": 450.71, "color": "#7c3aed"}, {"id": 12, "cluster": 3, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 9.37101, "projection_y": 11.80583, "screen_x": 870.72, "screen_y": 187.1, "color": "#d97706"}, {"id": 13, "cluster": 1, "cluster_distance": 12.7275, "cluster_rank": 3, "projection_x": -0.15893, "projection_y": -11.32406, "screen_x": 617.81, "screen_y": 796.21, "color": "#dc2626"}]}, {"key": "visit_order_svd__kmeans__k6", "label": "visit_order_svd + kmeans (k=6)", "embedding": "visit_order_svd", "algorithm": "kmeans", "n_clusters": 6, "silhouette": 0.278, "davies_bouldin": 0.6945, "selected": false, "feature_type": "visit_order_svd", "svd_components": 8, "clusters": [{"cluster_id": 0, "color": "#2563eb", "size": 4, "hint": "motif=lldrr, end=(7,13)", "avg_moves": 173.75, "avg_overlaps": 14.75, "avg_turn_rate": 0.4747, "source_counts": {"human": 4}, "centroid_x": 690.35, "centroid_y": 587.24, "top_motifs": [{"motif": "lldrr", "count": 17, "lift": 1.7633}, {"motif": "rrdll", "count": 14, "lift": 1.6942}, {"motif": "llldr", "count": 13, "lift": 1.5731}], "top_end_positions": [{"end_row": 7, "end_col": 13, "count": 3}, {"end_row": 1, "end_col": 12, "count": 1}]}, {"cluster_id": 1, "color": "#dc2626", "size": 3, "hint": "motif=rrrru, end=(0,6)", "avg_moves": 173.67, "avg_overlaps": 14.67, "avg_turn_rate": 0.391, "source_counts": {"human": 3}, "centroid_x": 828.51, "centroid_y": 396.81, "top_motifs": [{"motif": "rrrru", "count": 11, "lift": 2.2196}, {"motif": "lurrr", "count": 9, "lift": 2.1793}, {"motif": "llllu", "count": 13, "lift": 2.1709}], "top_end_positions": [{"end_row": 0, "end_col": 6, "count": 1}, {"end_row": 2, "end_col": 11, "count": 1}, {"end_row": 7, "end_col": 13, "count": 1}]}, {"cluster_id": 2, "color": "#16a34a", "size": 3, "hint": "motif=uuuuu, end=(9,13)", "avg_moves": 187.33, "avg_overlaps": 28.33, "avg_turn_rate": 0.4139, "source_counts": {"human": 3}, "centroid_x": 528.42, "centroid_y": 738.89, "top_motifs": [{"motif": "uuuuu", "count": 46, "lift": 3.3252}, {"motif": "druuu", "count": 10, "lift": 2.6364}, {"motif": "dddru", "count": 9, "lift": 2.521}], "top_end_positions": [{"end_row": 9, "end_col": 13, "count": 3}]}, {"cluster_id": 3, "color": "#d97706", "size": 2, "hint": "motif=lllll, end=(5,1)", "avg_moves": 179.5, "avg_overlaps": 20.5, "avg_turn_rate": 0.3783, "source_counts": {"human": 2}, "centroid_x": 160.32, "centroid_y": 289.07, "top_motifs": [{"motif": "lllll", "count": 30, "lift": 2.1498}, {"motif": "urrrr", "count": 8, "lift": 1.9373}, {"motif": "rrrrr", "count": 26, "lift": 1.3938}], "top_end_positions": [{"end_row": 5, "end_col": 1, "count": 1}, {"end_row": 6, "end_col": 7, "count": 1}]}, {"cluster_id": 4, "color": "#7c3aed", "size": 1, "hint": "motif=, end=(1,4)", "avg_moves": 195.0, "avg_overlaps": 36.0, "avg_turn_rate": 0.4485, "source_counts": {"human": 1}, "centroid_x": 870.72, "centroid_y": 187.1, "top_motifs": [], "top_end_positions": [{"end_row": 1, "end_col": 4, "count": 1}]}, {"cluster_id": 5, "color": "#0891b2", "size": 1, "hint": "motif=ddddd, end=(8,11)", "avg_moves": 189.0, "avg_overlaps": 30.0, "avg_turn_rate": 0.3085, "source_counts": {"human": 1}, "centroid_x": 684.87, "centroid_y": 450.71, "top_motifs": [{"motif": "ddddd", "count": 10, "lift": 1.5315}, {"motif": "rrrrr", "count": 14, "lift": 1.424}, {"motif": "lllll", "count": 9, "lift": 1.2237}], "top_end_positions": [{"end_row": 8, "end_col": 11, "count": 1}]}], "points": [{"id": 0, "cluster": 0, "cluster_distance": 2.3048, "cluster_rank": 1, "projection_x": 2.10868, "projection_y": -3.35763, "screen_x": 677.99, "screen_y": 586.42, "color": "#2563eb"}, {"id": 1, "cluster": 0, "cluster_distance": 3.6162, "cluster_rank": 2, "projection_x": 2.53924, "projection_y": -4.10475, "screen_x": 689.42, "screen_y": 606.09, "color": "#2563eb"}, {"id": 2, "cluster": 0, "cluster_distance": 4.7193, "cluster_rank": 3, "projection_x": 3.04842, "projection_y": -1.40879, "screen_x": 702.93, "screen_y": 535.1, "color": "#2563eb"}, {"id": 3, "cluster": 0, "cluster_distance": 8.3809, "cluster_rank": 4, "projection_x": 2.60184, "projection_y": -4.68343, "screen_x": 691.08, "screen_y": 621.33, "color": "#2563eb"}, {"id": 4, "cluster": 1, "cluster_distance": 3.5005, "cluster_rank": 1, "projection_x": 6.57821, "projection_y": 4.23415, "screen_x": 796.61, "screen_y": 386.5, "color": "#dc2626"}, {"id": 5, "cluster": 1, "cluster_distance": 5.358, "cluster_rank": 2, "projection_x": 10.44826, "projection_y": 6.25638, "screen_x": 899.31, "screen_y": 333.24, "color": "#dc2626"}, {"id": 6, "cluster": 1, "cluster_distance": 7.1571, "cluster_rank": 3, "projection_x": 6.31482, "projection_y": 1.03736, "screen_x": 789.62, "screen_y": 470.68, "color": "#dc2626"}, {"id": 7, "cluster": 3, "cluster_distance": 9.6733, "cluster_rank": 2, "projection_x": -16.65822, "projection_y": 14.20997, "screen_x": 179.95, "screen_y": 123.79, "color": "#d97706"}, {"id": 8, "cluster": 3, "cluster_distance": 9.6733, "cluster_rank": 1, "projection_x": -18.13749, "projection_y": 1.65787, "screen_x": 140.69, "screen_y": 454.34, "color": "#d97706"}, {"id": 9, "cluster": 2, "cluster_distance": 6.3747, "cluster_rank": 1, "projection_x": -7.33268, "projection_y": -8.13052, "screen_x": 427.43, "screen_y": 712.11, "color": "#16a34a"}, {"id": 10, "cluster": 2, "cluster_distance": 8.0662, "cluster_rank": 2, "projection_x": -3.09095, "projection_y": -7.98809, "screen_x": 540.0, "screen_y": 708.36, "color": "#16a34a"}, {"id": 11, "cluster": 5, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 2.36778, "projection_y": 1.79569, "screen_x": 684.87, "screen_y": 450.71, "color": "#0891b2"}, {"id": 12, "cluster": 4, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 9.37101, "projection_y": 11.80583, "screen_x": 870.72, "screen_y": 187.1, "color": "#7c3aed"}, {"id": 13, "cluster": 2, "cluster_distance": 12.7275, "cluster_rank": 3, "projection_x": -0.15893, "projection_y": -11.32406, "screen_x": 617.81, "screen_y": 796.21, "color": "#16a34a"}]}, {"key": "visit_order_svd__agglomerative__k6", "label": "visit_order_svd + agglomerative (k=6)", "embedding": "visit_order_svd", "algorithm": "agglomerative", "n_clusters": 6, "silhouette": 0.278, "davies_bouldin": 0.6945, "selected": false, "feature_type": "visit_order_svd", "svd_components": 8, "clusters": [{"cluster_id": 0, "color": "#2563eb", "size": 4, "hint": "motif=lldrr, end=(7,13)", "avg_moves": 173.75, "avg_overlaps": 14.75, "avg_turn_rate": 0.4747, "source_counts": {"human": 4}, "centroid_x": 690.35, "centroid_y": 587.24, "top_motifs": [{"motif": "lldrr", "count": 17, "lift": 1.7633}, {"motif": "rrdll", "count": 14, "lift": 1.6942}, {"motif": "llldr", "count": 13, "lift": 1.5731}], "top_end_positions": [{"end_row": 7, "end_col": 13, "count": 3}, {"end_row": 1, "end_col": 12, "count": 1}]}, {"cluster_id": 1, "color": "#dc2626", "size": 3, "hint": "motif=uuuuu, end=(9,13)", "avg_moves": 187.33, "avg_overlaps": 28.33, "avg_turn_rate": 0.4139, "source_counts": {"human": 3}, "centroid_x": 528.42, "centroid_y": 738.89, "top_motifs": [{"motif": "uuuuu", "count": 46, "lift": 3.3252}, {"motif": "druuu", "count": 10, "lift": 2.6364}, {"motif": "dddru", "count": 9, "lift": 2.521}], "top_end_positions": [{"end_row": 9, "end_col": 13, "count": 3}]}, {"cluster_id": 2, "color": "#16a34a", "size": 3, "hint": "motif=rrrru, end=(0,6)", "avg_moves": 173.67, "avg_overlaps": 14.67, "avg_turn_rate": 0.391, "source_counts": {"human": 3}, "centroid_x": 828.51, "centroid_y": 396.81, "top_motifs": [{"motif": "rrrru", "count": 11, "lift": 2.2196}, {"motif": "lurrr", "count": 9, "lift": 2.1793}, {"motif": "llllu", "count": 13, "lift": 2.1709}], "top_end_positions": [{"end_row": 0, "end_col": 6, "count": 1}, {"end_row": 2, "end_col": 11, "count": 1}, {"end_row": 7, "end_col": 13, "count": 1}]}, {"cluster_id": 3, "color": "#d97706", "size": 2, "hint": "motif=lllll, end=(5,1)", "avg_moves": 179.5, "avg_overlaps": 20.5, "avg_turn_rate": 0.3783, "source_counts": {"human": 2}, "centroid_x": 160.32, "centroid_y": 289.07, "top_motifs": [{"motif": "lllll", "count": 30, "lift": 2.1498}, {"motif": "urrrr", "count": 8, "lift": 1.9373}, {"motif": "rrrrr", "count": 26, "lift": 1.3938}], "top_end_positions": [{"end_row": 5, "end_col": 1, "count": 1}, {"end_row": 6, "end_col": 7, "count": 1}]}, {"cluster_id": 4, "color": "#7c3aed", "size": 1, "hint": "motif=, end=(1,4)", "avg_moves": 195.0, "avg_overlaps": 36.0, "avg_turn_rate": 0.4485, "source_counts": {"human": 1}, "centroid_x": 870.72, "centroid_y": 187.1, "top_motifs": [], "top_end_positions": [{"end_row": 1, "end_col": 4, "count": 1}]}, {"cluster_id": 5, "color": "#0891b2", "size": 1, "hint": "motif=ddddd, end=(8,11)", "avg_moves": 189.0, "avg_overlaps": 30.0, "avg_turn_rate": 0.3085, "source_counts": {"human": 1}, "centroid_x": 684.87, "centroid_y": 450.71, "top_motifs": [{"motif": "ddddd", "count": 10, "lift": 1.5315}, {"motif": "rrrrr", "count": 14, "lift": 1.424}, {"motif": "lllll", "count": 9, "lift": 1.2237}], "top_end_positions": [{"end_row": 8, "end_col": 11, "count": 1}]}], "points": [{"id": 0, "cluster": 0, "cluster_distance": 2.3048, "cluster_rank": 1, "projection_x": 2.10868, "projection_y": -3.35763, "screen_x": 677.99, "screen_y": 586.42, "color": "#2563eb"}, {"id": 1, "cluster": 0, "cluster_distance": 3.6162, "cluster_rank": 2, "projection_x": 2.53924, "projection_y": -4.10475, "screen_x": 689.42, "screen_y": 606.09, "color": "#2563eb"}, {"id": 2, "cluster": 0, "cluster_distance": 4.7193, "cluster_rank": 3, "projection_x": 3.04842, "projection_y": -1.40879, "screen_x": 702.93, "screen_y": 535.1, "color": "#2563eb"}, {"id": 3, "cluster": 0, "cluster_distance": 8.3809, "cluster_rank": 4, "projection_x": 2.60184, "projection_y": -4.68343, "screen_x": 691.08, "screen_y": 621.33, "color": "#2563eb"}, {"id": 4, "cluster": 2, "cluster_distance": 3.5005, "cluster_rank": 1, "projection_x": 6.57821, "projection_y": 4.23415, "screen_x": 796.61, "screen_y": 386.5, "color": "#16a34a"}, {"id": 5, "cluster": 2, "cluster_distance": 5.358, "cluster_rank": 2, "projection_x": 10.44826, "projection_y": 6.25638, "screen_x": 899.31, "screen_y": 333.24, "color": "#16a34a"}, {"id": 6, "cluster": 2, "cluster_distance": 7.1571, "cluster_rank": 3, "projection_x": 6.31482, "projection_y": 1.03736, "screen_x": 789.62, "screen_y": 470.68, "color": "#16a34a"}, {"id": 7, "cluster": 3, "cluster_distance": 9.6733, "cluster_rank": 1, "projection_x": -16.65822, "projection_y": 14.20997, "screen_x": 179.95, "screen_y": 123.79, "color": "#d97706"}, {"id": 8, "cluster": 3, "cluster_distance": 9.6733, "cluster_rank": 2, "projection_x": -18.13749, "projection_y": 1.65787, "screen_x": 140.69, "screen_y": 454.34, "color": "#d97706"}, {"id": 9, "cluster": 1, "cluster_distance": 6.3747, "cluster_rank": 1, "projection_x": -7.33268, "projection_y": -8.13052, "screen_x": 427.43, "screen_y": 712.11, "color": "#dc2626"}, {"id": 10, "cluster": 1, "cluster_distance": 8.0662, "cluster_rank": 2, "projection_x": -3.09095, "projection_y": -7.98809, "screen_x": 540.0, "screen_y": 708.36, "color": "#dc2626"}, {"id": 11, "cluster": 5, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 2.36778, "projection_y": 1.79569, "screen_x": 684.87, "screen_y": 450.71, "color": "#0891b2"}, {"id": 12, "cluster": 4, "cluster_distance": 0.0, "cluster_rank": 1, "projection_x": 9.37101, "projection_y": 11.80583, "screen_x": 870.72, "screen_y": 187.1, "color": "#7c3aed"}, {"id": 13, "cluster": 1, "cluster_distance": 12.7275, "cluster_rank": 3, "projection_x": -0.15893, "projection_y": -11.32406, "screen_x": 617.81, "screen_y": 796.21, "color": "#dc2626"}]}]}</script>
+  <script>
+    const payload = JSON.parse(document.getElementById("projection-data").textContent);
+    const basePoints = payload.points;
+    const strategies = payload.strategies;
+    const strategyMap = new Map(strategies.map((strategy) => [strategy.key, strategy]));
+    const basePointLookup = new Map(basePoints.map((point) => [point.id, point]));
+
+    const pointLayer = document.getElementById("point-layer");
+    const centroidLayer = document.getElementById("centroid-layer");
+    const strategyList = document.getElementById("strategy-list");
+    const clusterList = document.getElementById("cluster-list");
+    const searchInput = document.getElementById("search");
+    const clearSearchButton = document.getElementById("clear-search");
+    const clearSelectionButton = document.getElementById("clear-selection");
+    const showAllButton = document.getElementById("show-all");
+    const hideAllButton = document.getElementById("hide-all");
+    const visibleCount = document.getElementById("visible-count");
+    const plotTitle = document.getElementById("plot-title");
+    const plotSubtitle = document.getElementById("plot-subtitle");
+    const statusBar = document.getElementById("status-bar");
+
+    const selectionEmpty = document.getElementById("selection-empty");
+    const selectionContent = document.getElementById("selection-content");
+    const detailSource = document.getElementById("detail-source");
+    const detailIndex = document.getElementById("detail-index");
+    const detailContext = document.getElementById("detail-context");
+    const detailSeed = document.getElementById("detail-seed");
+    const detailStrategy = document.getElementById("detail-strategy");
+    const detailCluster = document.getElementById("detail-cluster");
+    const detailDistance = document.getElementById("detail-distance");
+    const detailMoves = document.getElementById("detail-moves");
+    const detailOverlaps = document.getElementById("detail-overlaps");
+    const detailEnd = document.getElementById("detail-end");
+    const detailProjection = document.getElementById("detail-projection");
+    const detailRank = document.getElementById("detail-rank");
+    const detailHint = document.getElementById("detail-hint");
+    const detailPath = document.getElementById("detail-path");
+    const detailLink = document.getElementById("detail-link");
+    const detailImage = document.getElementById("detail-image");
+    const previewEmpty = document.getElementById("preview-empty");
+    const previewContent = document.getElementById("preview-content");
+    const previewSource = document.getElementById("preview-source");
+    const previewIndex = document.getElementById("preview-index");
+    const previewCluster = document.getElementById("preview-cluster");
+    const previewStrategy = document.getElementById("preview-strategy");
+    const previewEnd = document.getElementById("preview-end");
+    const previewChip = document.getElementById("preview-chip");
+
+    let currentStrategyKey = payload.selected_strategy_key;
+    let currentStrategy = strategyMap.get(currentStrategyKey);
+    let currentPointLookup = new Map();
+    let currentClusterLookup = new Map();
+    let activeClusters = new Set();
+    let selectedPointId = null;
+
+    const pointElements = new Map();
+    const pointTitleNodes = new Map();
+    const clusterCheckboxes = new Map();
+
+    function strategyStatusText(strategy) {
+      return "silhouette=" + strategy.silhouette.toFixed(4) + " | davies-bouldin=" + strategy.davies_bouldin.toFixed(4);
+    }
+
+    function getOverlay(pointId) {
+      return currentPointLookup.get(pointId);
+    }
+
+    function getClusterInfo(clusterId) {
+      return currentClusterLookup.get(clusterId);
+    }
+
+    function pointLabel(basePoint) {
+      return basePoint.source_id || (basePoint.source + "-" + basePoint.index);
+    }
+
+    function pointContext(basePoint) {
+      if (basePoint.source !== "human") return "optimal library";
+      const parts = [];
+      if (basePoint.user) parts.push(basePoint.user);
+      if (basePoint.config_label) parts.push(basePoint.config_label);
+      if (basePoint.size) parts.push(basePoint.size + "x" + basePoint.size);
+      return parts.length ? parts.join(" | ") : "human submission";
+    }
+
+    function pointRadius(basePoint) {
+      return basePoint.source === "human" ? payload.point_radius + 1.6 : payload.point_radius;
+    }
+
+    function matchesQuery(basePoint, overlay, rawQuery) {
+      const query = rawQuery.trim().toLowerCase();
+      if (!query) return true;
+      return String(basePoint.index).includes(query)
+        || pointLabel(basePoint).toLowerCase().includes(query)
+        || String(basePoint.source || "").toLowerCase().includes(query)
+        || String(basePoint.user || "").toLowerCase().includes(query)
+        || String(basePoint.config_label || "").toLowerCase().includes(query)
+        || String(basePoint.seed).includes(query)
+        || String(overlay.cluster) === query
+        || basePoint.path.toLowerCase().includes(query)
+        || currentStrategy.embedding.toLowerCase().includes(query)
+        || currentStrategy.algorithm.toLowerCase().includes(query);
+    }
+
+    function visibleForCurrentFilters(basePoint, overlay) {
+      return activeClusters.has(overlay.cluster) && matchesQuery(basePoint, overlay, searchInput.value);
+    }
+
+    function updatePlotHeader() {
+      plotTitle.textContent = currentStrategy.label;
+      plotSubtitle.textContent = strategyStatusText(currentStrategy) + " | feature type=" + currentStrategy.feature_type;
+    }
+
+    function updateSelection(pointId) {
+      if (pointId === null) {
+        selectionEmpty.hidden = false;
+        selectionContent.hidden = true;
+        previewEmpty.hidden = false;
+        previewContent.hidden = true;
+        detailLink.href = "#";
+        detailImage.removeAttribute("src");
+        return;
+      }
+      const basePoint = basePointLookup.get(pointId);
+      const overlay = getOverlay(pointId);
+      if (!basePoint || !overlay) {
+        selectionEmpty.hidden = false;
+        selectionContent.hidden = true;
+        previewEmpty.hidden = false;
+        previewContent.hidden = true;
+        return;
+      }
+      const clusterInfo = getClusterInfo(overlay.cluster);
+
+      selectionEmpty.hidden = true;
+      selectionContent.hidden = false;
+      previewEmpty.hidden = true;
+      previewContent.hidden = false;
+      detailSource.textContent = pointLabel(basePoint) + " (" + basePoint.source + ")";
+      detailIndex.textContent = String(basePoint.index);
+      detailContext.textContent = pointContext(basePoint);
+      detailSeed.textContent = String(basePoint.seed);
+      detailStrategy.textContent = currentStrategy.label;
+      detailCluster.textContent = String(overlay.cluster);
+      detailDistance.textContent = overlay.cluster_distance.toFixed(4);
+      detailMoves.textContent = String(basePoint.moves);
+      detailOverlaps.textContent = String(basePoint.overlaps);
+      detailEnd.textContent = "(" + basePoint.end_row + ", " + basePoint.end_col + ")";
+      detailProjection.textContent = "(" + overlay.projection_x.toFixed(4) + ", " + overlay.projection_y.toFixed(4) + ")";
+      detailRank.textContent = String(overlay.cluster_rank);
+      detailHint.textContent = clusterInfo ? clusterInfo.hint : "No hint available";
+      detailPath.textContent = basePoint.path;
+      detailLink.href = basePoint.image_href;
+      detailLink.textContent = "Open " + basePoint.image;
+      detailImage.src = basePoint.image_href;
+      detailImage.alt = "Path preview for index " + basePoint.index;
+      previewSource.textContent = pointLabel(basePoint);
+      previewIndex.textContent = String(basePoint.index);
+      previewCluster.textContent = String(overlay.cluster);
+      previewStrategy.textContent = currentStrategy.label;
+      previewEnd.textContent = "(" + basePoint.end_row + ", " + basePoint.end_col + ")";
+      previewChip.textContent = clusterInfo ? clusterInfo.hint : "No hint available";
+    }
+
+    function syncCheckboxes() {
+      for (const cluster of currentStrategy.clusters) {
+        const checkbox = clusterCheckboxes.get(cluster.cluster_id);
+        if (checkbox) checkbox.checked = activeClusters.has(cluster.cluster_id);
+      }
+    }
+
+    function renderStrategyList() {
+      strategyList.innerHTML = "";
+      for (const strategy of strategies) {
+        const card = document.createElement("div");
+        card.className = "strategy-card" + (strategy.key === currentStrategyKey ? " active" : "");
+
+        const top = document.createElement("div");
+        top.className = "strategy-top";
+
+        const left = document.createElement("div");
+        const name = document.createElement("div");
+        name.className = "strategy-name";
+        name.textContent = strategy.label;
+        const meta = document.createElement("div");
+        meta.className = "strategy-meta";
+        meta.textContent = strategyStatusText(strategy);
+        left.appendChild(name);
+        left.appendChild(meta);
+
+        const useButton = document.createElement("button");
+        useButton.type = "button";
+        useButton.textContent = strategy.key === currentStrategyKey ? "Active" : "Use";
+        useButton.disabled = strategy.key === currentStrategyKey;
+        useButton.addEventListener("click", () => setStrategy(strategy.key));
+
+        top.appendChild(left);
+        top.appendChild(useButton);
+
+        const tags = document.createElement("div");
+        tags.className = "strategy-tags";
+        const featureTag = document.createElement("span");
+        featureTag.className = "tag";
+        featureTag.textContent = strategy.feature_type;
+        tags.appendChild(featureTag);
+        if (strategy.selected) {
+          const selectedTag = document.createElement("span");
+          selectedTag.className = "tag selected";
+          selectedTag.textContent = "Selected by classifier";
+          tags.appendChild(selectedTag);
+        }
+
+        card.appendChild(top);
+        card.appendChild(tags);
+        strategyList.appendChild(card);
+      }
+    }
+
+    function renderClusterList() {
+      clusterList.innerHTML = "";
+      clusterCheckboxes.clear();
+      for (const cluster of currentStrategy.clusters) {
+        const card = document.createElement("div");
+        card.className = "cluster-card";
+
+        const top = document.createElement("div");
+        top.className = "cluster-top";
+
+        const color = document.createElement("span");
+        color.className = "cluster-color";
+        color.style.background = cluster.color;
+
+        const label = document.createElement("label");
+        label.className = "cluster-name";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = activeClusters.has(cluster.cluster_id);
+        checkbox.style.marginRight = "8px";
+        checkbox.addEventListener("change", () => {
+          if (checkbox.checked) activeClusters.add(cluster.cluster_id);
+          else activeClusters.delete(cluster.cluster_id);
+          refreshPoints();
+        });
+        clusterCheckboxes.set(cluster.cluster_id, checkbox);
+        label.appendChild(checkbox);
+        label.append("Cluster " + cluster.cluster_id + " (" + cluster.size + ")");
+
+        const onlyButton = document.createElement("button");
+        onlyButton.type = "button";
+        onlyButton.textContent = "Only";
+        onlyButton.addEventListener("click", () => {
+          activeClusters = new Set([cluster.cluster_id]);
+          syncCheckboxes();
+          refreshPoints();
+        });
+
+        top.appendChild(color);
+        top.appendChild(label);
+        top.appendChild(onlyButton);
+
+        const meta = document.createElement("div");
+        meta.className = "cluster-meta";
+        const motifSummary = cluster.top_motifs.length
+          ? cluster.top_motifs.map((motif) => motif.motif).join(", ")
+          : "no dominant motifs";
+        const sourceSummary = Object.entries(cluster.source_counts || {})
+          .map(([source, count]) => source + "=" + count)
+          .join(" | ");
+        meta.innerHTML = "<div>" + cluster.hint + "</div>"
+          + "<div>avg moves=" + cluster.avg_moves.toFixed(2) + " | avg overlaps=" + cluster.avg_overlaps.toFixed(2) + "</div>"
+          + "<div>sources: " + (sourceSummary || "unknown") + "</div>"
+          + "<div>motifs: " + motifSummary + "</div>";
+
+        const actions = document.createElement("div");
+        actions.className = "cluster-actions";
+
+        const showButton = document.createElement("button");
+        showButton.type = "button";
+        showButton.textContent = "Show";
+        showButton.addEventListener("click", () => {
+          activeClusters.add(cluster.cluster_id);
+          syncCheckboxes();
+          refreshPoints();
+        });
+
+        const hideButton = document.createElement("button");
+        hideButton.type = "button";
+        hideButton.textContent = "Hide";
+        hideButton.addEventListener("click", () => {
+          activeClusters.delete(cluster.cluster_id);
+          syncCheckboxes();
+          refreshPoints();
+        });
+
+        actions.appendChild(showButton);
+        actions.appendChild(hideButton);
+
+        card.appendChild(top);
+        card.appendChild(meta);
+        card.appendChild(actions);
+        clusterList.appendChild(card);
+      }
+    }
+
+    function renderCentroids() {
+      centroidLayer.innerHTML = "";
+      for (const cluster of currentStrategy.clusters) {
+        const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        group.dataset.cluster = String(cluster.cluster_id);
+
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", String(cluster.centroid_x));
+        circle.setAttribute("cy", String(cluster.centroid_y));
+        circle.setAttribute("r", "9");
+        circle.setAttribute("fill", "#ffffff");
+        circle.setAttribute("stroke", cluster.color);
+        circle.setAttribute("stroke-width", "3");
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", String(cluster.centroid_x));
+        text.setAttribute("y", String(cluster.centroid_y + 1));
+        text.setAttribute("class", "centroid-label");
+        text.textContent = String(cluster.cluster_id);
+
+        group.appendChild(circle);
+        group.appendChild(text);
+        centroidLayer.appendChild(group);
+      }
+    }
+
+    function renderPoints() {
+      for (const basePoint of basePoints) {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("class", "point");
+        circle.setAttribute("r", String(payload.point_radius));
+        const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        circle.appendChild(title);
+
+        circle.addEventListener("mouseenter", () => {
+          const overlay = getOverlay(basePoint.id);
+          statusBar.textContent = "strategy=" + currentStrategy.label
+            + " | record=" + pointLabel(basePoint)
+            + " seed=" + basePoint.seed
+            + " cluster=" + overlay.cluster
+            + " moves=" + basePoint.moves
+            + " overlaps=" + basePoint.overlaps;
+        });
+        circle.addEventListener("mouseleave", () => {
+          if (selectedPointId === null) {
+            statusBar.textContent = "Hover over points for quick context. Click to pin a selection in the sidebar.";
+            return;
+          }
+          const selectedBase = basePointLookup.get(selectedPointId);
+          const selectedOverlay = getOverlay(selectedPointId);
+          if (!selectedBase || !selectedOverlay) {
+            statusBar.textContent = "Hover over points for quick context. Click to pin a selection in the sidebar.";
+            return;
+          }
+          statusBar.textContent = "Pinned selection: strategy=" + currentStrategy.label
+            + " | record=" + pointLabel(selectedBase)
+            + " cluster=" + selectedOverlay.cluster;
+        });
+        circle.addEventListener("click", () => {
+          selectedPointId = basePoint.id;
+          updateSelection(selectedPointId);
+          statusBar.textContent = "Pinned selection: strategy=" + currentStrategy.label
+            + " | record=" + pointLabel(basePoint)
+            + " cluster=" + getOverlay(basePoint.id).cluster;
+          refreshPoints();
+        });
+
+        pointElements.set(basePoint.id, circle);
+        pointTitleNodes.set(basePoint.id, title);
+        pointLayer.appendChild(circle);
+      }
+    }
+
+    function applyStrategyToPoints() {
+      currentPointLookup = new Map(currentStrategy.points.map((point) => [point.id, point]));
+      currentClusterLookup = new Map(currentStrategy.clusters.map((cluster) => [cluster.cluster_id, cluster]));
+
+      for (const basePoint of basePoints) {
+        const overlay = getOverlay(basePoint.id);
+        const circle = pointElements.get(basePoint.id);
+        const title = pointTitleNodes.get(basePoint.id);
+        if (!overlay || !circle || !title) continue;
+        circle.setAttribute("cx", String(overlay.screen_x));
+        circle.setAttribute("cy", String(overlay.screen_y));
+        circle.dataset.baseRadius = String(pointRadius(basePoint));
+        circle.dataset.baseStroke = basePoint.source === "human" ? "#0f172a" : "#ffffff";
+        circle.dataset.baseStrokeWidth = basePoint.source === "human" ? "1.5" : "0.9";
+        circle.dataset.baseOpacity = basePoint.source === "human" ? "0.96" : "0.78";
+        circle.setAttribute("fill", overlay.color);
+        circle.setAttribute("stroke", circle.dataset.baseStroke);
+        circle.setAttribute("stroke-width", circle.dataset.baseStrokeWidth);
+        circle.setAttribute("fill-opacity", circle.dataset.baseOpacity);
+        title.textContent = "strategy=" + currentStrategy.label
+          + " | record=" + pointLabel(basePoint)
+          + " source=" + basePoint.source
+          + " seed=" + basePoint.seed
+          + " cluster=" + overlay.cluster
+          + " moves=" + basePoint.moves
+          + " overlaps=" + basePoint.overlaps
+          + " | path=" + basePoint.path.slice(0, 48);
+      }
+    }
+
+    function refreshPoints() {
+      let visible = 0;
+      const visibleByCluster = new Map();
+      for (const basePoint of basePoints) {
+        const overlay = getOverlay(basePoint.id);
+        const circle = pointElements.get(basePoint.id);
+        if (!overlay || !circle) continue;
+        const isVisible = visibleForCurrentFilters(basePoint, overlay);
+        circle.style.display = isVisible ? "" : "none";
+        if (isVisible) {
+          visible += 1;
+          visibleByCluster.set(
+            overlay.cluster,
+            (visibleByCluster.get(overlay.cluster) || 0) + 1,
+          );
+        }
+
+        const selected = selectedPointId === basePoint.id;
+        const baseRadius = Number(circle.dataset.baseRadius || payload.point_radius);
+        const baseStroke = circle.dataset.baseStroke || "#ffffff";
+        const baseStrokeWidth = circle.dataset.baseStrokeWidth || "0.9";
+        const baseOpacity = circle.dataset.baseOpacity || "0.78";
+        circle.setAttribute("r", selected ? String(baseRadius + 1.8) : String(baseRadius));
+        circle.setAttribute("stroke", selected ? "#0f172a" : baseStroke);
+        circle.setAttribute("stroke-width", selected ? "2.1" : baseStrokeWidth);
+        circle.setAttribute("fill-opacity", isVisible ? (selected ? "1" : baseOpacity) : "0");
+      }
+
+      for (const group of centroidLayer.children) {
+        const clusterId = Number(group.dataset.cluster);
+        group.style.display = visibleByCluster.get(clusterId) ? "" : "none";
+      }
+
+      visibleCount.textContent = visible + " / " + basePoints.length + " points visible";
+      if (selectedPointId !== null) {
+        updateSelection(selectedPointId);
+      }
+    }
+
+    function setStrategy(key) {
+      currentStrategyKey = key;
+      currentStrategy = strategyMap.get(key);
+      activeClusters = new Set(currentStrategy.clusters.map((cluster) => cluster.cluster_id));
+      renderStrategyList();
+      renderClusterList();
+      renderCentroids();
+      applyStrategyToPoints();
+      updatePlotHeader();
+      refreshPoints();
+      if (selectedPointId === null) {
+        updateSelection(null);
+      } else {
+        updateSelection(selectedPointId);
+      }
+    }
+
+    clearSearchButton.addEventListener("click", () => {
+      searchInput.value = "";
+      refreshPoints();
+    });
+    clearSelectionButton.addEventListener("click", () => {
+      selectedPointId = null;
+      updateSelection(null);
+      statusBar.textContent = "Hover over points for quick context. Click to pin a selection in the sidebar.";
+      refreshPoints();
+    });
+    showAllButton.addEventListener("click", () => {
+      activeClusters = new Set(currentStrategy.clusters.map((cluster) => cluster.cluster_id));
+      syncCheckboxes();
+      refreshPoints();
+    });
+    hideAllButton.addEventListener("click", () => {
+      activeClusters.clear();
+      syncCheckboxes();
+      refreshPoints();
+    });
+    searchInput.addEventListener("input", refreshPoints);
+
+    renderPoints();
+    setStrategy(payload.selected_strategy_key);
+  </script>
+</body>
+</html>

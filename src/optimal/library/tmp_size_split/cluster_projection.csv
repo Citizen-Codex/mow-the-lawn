@@ -1,0 +1,4 @@
+size,row_count,sources,strategy,html_href,svg_path,csv_path
+7,1029,"optimal=1000, human=29",visit_order_svd + kmeans (k=4),size_7/cluster_projection.html,src/optimal/library/tmp_size_split/size_7/cluster_projection.svg,src/optimal/library/tmp_size_split/size_7/cluster_projection.csv
+10,14,human=14,visit_order_svd + kmeans (k=4),size_10/cluster_projection.html,src/optimal/library/tmp_size_split/size_10/cluster_projection.svg,src/optimal/library/tmp_size_split/size_10/cluster_projection.csv
+14,14,human=14,visit_order_svd + kmeans (k=4),size_14/cluster_projection.html,src/optimal/library/tmp_size_split/size_14/cluster_projection.svg,src/optimal/library/tmp_size_split/size_14/cluster_projection.csv
