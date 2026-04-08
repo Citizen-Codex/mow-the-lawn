@@ -28,6 +28,7 @@ DEFAULT_OUTPUT_DIRNAME = "clusters"
 DEFAULT_HUMAN_IMAGE_DIRNAME = "human_images"
 DEFAULT_MIN_CLUSTERS = 3
 DEFAULT_MAX_CLUSTERS = 8
+DEFAULT_HUMAN_MAX_CLUSTERS = 4
 DEFAULT_EXAMPLES_PER_CLUSTER = 5
 DEFAULT_RANDOM_STATE = 42
 DEFAULT_MAX_COMPONENTS = 8
@@ -610,6 +611,42 @@ def search_candidates(
     return sorted(candidates, key=candidate_sort_key, reverse=True)
 
 
+def choose_shared_strategy(
+    size_candidates: dict[int, list[CandidateResult]],
+) -> tuple[str, str]:
+    shared_scores: dict[tuple[str, str], dict[int, CandidateResult]] = {}
+    for size, candidates in size_candidates.items():
+        for candidate in candidates:
+            key = (candidate.embedding, candidate.algorithm)
+            best_for_size = shared_scores.setdefault(key, {}).get(size)
+            if best_for_size is None or candidate_sort_key(
+                candidate
+            ) > candidate_sort_key(best_for_size):
+                shared_scores.setdefault(key, {})[size] = candidate
+
+    complete_options = {
+        key: list(value.values())
+        for key, value in shared_scores.items()
+        if len(value) == len(size_candidates)
+    }
+    if not complete_options:
+        raise ValueError("No shared clustering strategy is available across all sizes")
+
+    def aggregate_key(
+        item: tuple[tuple[str, str], list[CandidateResult]],
+    ) -> tuple[float, float, int, int]:
+        (embedding_name, algorithm_name), candidates = item
+        return (
+            float(np.mean([candidate.silhouette for candidate in candidates])),
+            -float(np.mean([candidate.davies_bouldin for candidate in candidates])),
+            EMBEDDING_PREFERENCE.get(embedding_name, 0),
+            ALGORITHM_PREFERENCE.get(algorithm_name, 0),
+        )
+
+    best_key, _ = max(complete_options.items(), key=aggregate_key)
+    return best_key
+
+
 def relabel_clusters(
     labels: np.ndarray,
     centers: np.ndarray,
@@ -844,17 +881,25 @@ def _cluster_size_group(
     max_components: int,
     motif_length: int,
     random_state: int,
+    forced_embedding: str | None = None,
+    forced_algorithm: str | None = None,
 ) -> dict[str, object]:
     size = int(dataframe["size"].iloc[0])
     prepared = prepare_paths(dataframe)
 
     embedding_names = (
-        ["tfidf_svd", "count_svd", "pattern_stats", "visit_order_svd"]
-        if embedding == "auto"
-        else [embedding]
+        [forced_embedding]
+        if forced_embedding is not None
+        else (
+            ["tfidf_svd", "count_svd", "pattern_stats", "visit_order_svd"]
+            if embedding == "auto"
+            else [embedding]
+        )
     )
     algorithm_names = (
-        ["kmeans", "agglomerative"] if algorithm == "auto" else [algorithm]
+        [forced_algorithm]
+        if forced_algorithm is not None
+        else (["kmeans", "agglomerative"] if algorithm == "auto" else [algorithm])
     )
     requested_cluster_counts = (
         [clusters]
@@ -954,6 +999,7 @@ def _cluster_size_group(
         "size": size,
         "row_count": int(len(dataframe)),
         "source_counts": summary["source_counts"],
+        "strategy_candidates": candidates,
         "clustered_csv": clustered_output,
         "summary_json": summary_output,
         "selected_strategy": summary["clustering_strategy"],
@@ -1004,6 +1050,64 @@ def cluster_optimal_paths(
         human_results_path=human_results_path,
     )
     resolved_output_dir.mkdir(parents=True, exist_ok=True)
+    effective_max_clusters = max_clusters
+    shared_strategy: tuple[str, str] | None = None
+    if human_row_count > 0:
+        if clusters is not None and clusters > DEFAULT_HUMAN_MAX_CLUSTERS:
+            raise ValueError(
+                f"Human-results classification caps clusters at {DEFAULT_HUMAN_MAX_CLUSTERS}"
+            )
+        effective_max_clusters = min(max_clusters, DEFAULT_HUMAN_MAX_CLUSTERS)
+
+        size_candidates: dict[int, list[CandidateResult]] = {}
+        for size in sorted(int(value) for value in dataframe["size"].unique()):
+            subset = dataframe[dataframe["size"] == size].copy().reset_index(drop=True)
+            prepared = prepare_paths(subset)
+            embedding_names = (
+                ["tfidf_svd", "count_svd", "pattern_stats", "visit_order_svd"]
+                if embedding == "auto"
+                else [embedding]
+            )
+            algorithm_names = (
+                ["kmeans", "agglomerative"] if algorithm == "auto" else [algorithm]
+            )
+            requested_cluster_counts = (
+                [clusters]
+                if clusters is not None
+                else list(range(min_clusters, effective_max_clusters + 1))
+            )
+            cluster_counts = [
+                count for count in requested_cluster_counts if count < len(subset)
+            ]
+            if not cluster_counts:
+                raise ValueError(
+                    f"No valid cluster counts remain for size {size}; requested={requested_cluster_counts}, rows={len(subset)}"
+                )
+
+            embeddings = {
+                embedding_name: build_embedding(
+                    subset,
+                    embedding_name=embedding_name,
+                    max_components=max_components,
+                    random_state=random_state,
+                    prepared=prepared,
+                )
+                for embedding_name in embedding_names
+            }
+            size_candidates[size] = search_candidates(
+                embeddings,
+                algorithms=algorithm_names,
+                cluster_counts=cluster_counts,
+                random_state=random_state,
+            )
+
+        shared_strategy = choose_shared_strategy(size_candidates)
+        print(
+            "Shared human-results strategy across sizes: "
+            f"embedding={shared_strategy[0]} | algorithm={shared_strategy[1]} | "
+            f"max_k={effective_max_clusters}"
+        )
+
     size_results: list[dict[str, object]] = []
     for size in sorted(int(value) for value in dataframe["size"].unique()):
         subset = dataframe[dataframe["size"] == size].copy().reset_index(drop=True)
@@ -1016,11 +1120,17 @@ def cluster_optimal_paths(
                 algorithm=algorithm,
                 clusters=clusters,
                 min_clusters=min_clusters,
-                max_clusters=max_clusters,
+                max_clusters=effective_max_clusters,
                 examples_per_cluster=examples_per_cluster,
                 max_components=max_components,
                 motif_length=motif_length,
                 random_state=random_state,
+                forced_embedding=None
+                if shared_strategy is None
+                else shared_strategy[0],
+                forced_algorithm=None
+                if shared_strategy is None
+                else shared_strategy[1],
             )
         )
 
@@ -1030,6 +1140,15 @@ def cluster_optimal_paths(
         "grouped_by": "size",
         "row_count": int(len(dataframe)),
         "source_counts": source_counts(dataframe),
+        "shared_strategy": (
+            {
+                "embedding": shared_strategy[0],
+                "algorithm": shared_strategy[1],
+                "max_clusters": int(effective_max_clusters),
+            }
+            if shared_strategy is not None
+            else None
+        ),
         "sizes": [
             {
                 "size": int(result["size"]),

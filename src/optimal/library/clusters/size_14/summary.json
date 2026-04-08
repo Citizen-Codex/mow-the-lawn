@@ -8,166 +8,33 @@
     "human": 14
   },
   "clustering_strategy": {
-    "embedding": "visit_order_svd",
+    "embedding": "count_svd",
     "algorithm": "kmeans",
-    "selected_k": 7,
-    "silhouette": 0.3135,
-    "davies_bouldin": 0.5467
+    "selected_k": 4,
+    "silhouette": 0.2612,
+    "davies_bouldin": 0.8744
   },
   "clustering_features": {
-    "type": "visit_order_svd",
-    "feature_blocks": [
-      "first_visit_order",
-      "revisit_count",
-      "blocked_mask"
+    "type": "whole_path_count_svd",
+    "vectorizer": "count",
+    "ngram_range": [
+      2,
+      5
     ],
     "svd_components": 8,
     "component_names": [
-      "visit_component_0",
-      "visit_component_1",
-      "visit_component_2",
-      "visit_component_3",
-      "visit_component_4",
-      "visit_component_5",
-      "visit_component_6",
-      "visit_component_7"
+      "svd_component_0",
+      "svd_component_1",
+      "svd_component_2",
+      "svd_component_3",
+      "svd_component_4",
+      "svd_component_5",
+      "svd_component_6",
+      "svd_component_7"
     ],
     "motif_length_for_summary": 5
   },
   "strategy_candidates": [
-    {
-      "embedding": "visit_order_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 7,
-      "silhouette": 0.3135,
-      "davies_bouldin": 0.5467
-    },
-    {
-      "embedding": "visit_order_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 7,
-      "silhouette": 0.3135,
-      "davies_bouldin": 0.5467
-    },
-    {
-      "embedding": "visit_order_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 8,
-      "silhouette": 0.2874,
-      "davies_bouldin": 0.4199
-    },
-    {
-      "embedding": "visit_order_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 8,
-      "silhouette": 0.2874,
-      "davies_bouldin": 0.4199
-    },
-    {
-      "embedding": "visit_order_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 5,
-      "silhouette": 0.2806,
-      "davies_bouldin": 0.7336
-    },
-    {
-      "embedding": "visit_order_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 5,
-      "silhouette": 0.2806,
-      "davies_bouldin": 0.7336
-    },
-    {
-      "embedding": "visit_order_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 6,
-      "silhouette": 0.278,
-      "davies_bouldin": 0.6945
-    },
-    {
-      "embedding": "visit_order_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 6,
-      "silhouette": 0.278,
-      "davies_bouldin": 0.6945
-    },
-    {
-      "embedding": "count_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 5,
-      "silhouette": 0.2672,
-      "davies_bouldin": 0.8376
-    },
-    {
-      "embedding": "visit_order_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 4,
-      "silhouette": 0.2653,
-      "davies_bouldin": 0.8761
-    },
-    {
-      "embedding": "visit_order_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 4,
-      "silhouette": 0.2653,
-      "davies_bouldin": 0.8761
-    },
-    {
-      "embedding": "tfidf_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 8,
-      "silhouette": 0.2642,
-      "davies_bouldin": 0.5194
-    },
-    {
-      "embedding": "tfidf_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 8,
-      "silhouette": 0.2642,
-      "davies_bouldin": 0.5194
-    },
-    {
-      "embedding": "visit_order_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 3,
-      "silhouette": 0.2638,
-      "davies_bouldin": 1.1019
-    },
-    {
-      "embedding": "visit_order_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 3,
-      "silhouette": 0.2638,
-      "davies_bouldin": 1.1019
-    },
-    {
-      "embedding": "tfidf_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 7,
-      "silhouette": 0.2623,
-      "davies_bouldin": 0.6405
-    },
-    {
-      "embedding": "tfidf_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 7,
-      "silhouette": 0.2623,
-      "davies_bouldin": 0.6405
-    },
-    {
-      "embedding": "tfidf_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 6,
-      "silhouette": 0.2621,
-      "davies_bouldin": 0.6731
-    },
-    {
-      "embedding": "tfidf_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 6,
-      "silhouette": 0.2621,
-      "davies_bouldin": 0.6731
-    },
     {
       "embedding": "count_svd",
       "algorithm": "kmeans",
@@ -176,277 +43,137 @@
       "davies_bouldin": 0.8744
     },
     {
-      "embedding": "tfidf_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 5,
-      "silhouette": 0.2607,
-      "davies_bouldin": 0.8518
-    },
-    {
-      "embedding": "pattern_stats",
-      "algorithm": "kmeans",
-      "n_clusters": 6,
-      "silhouette": 0.2606,
-      "davies_bouldin": 0.7714
-    },
-    {
-      "embedding": "pattern_stats",
-      "algorithm": "agglomerative",
-      "n_clusters": 6,
-      "silhouette": 0.2606,
-      "davies_bouldin": 0.7714
-    },
-    {
-      "embedding": "count_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 6,
-      "silhouette": 0.2606,
-      "davies_bouldin": 0.7273
-    },
-    {
-      "embedding": "count_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 3,
-      "silhouette": 0.2572,
-      "davies_bouldin": 0.8343
-    },
-    {
-      "embedding": "pattern_stats",
-      "algorithm": "kmeans",
-      "n_clusters": 5,
-      "silhouette": 0.2562,
-      "davies_bouldin": 0.9372
-    },
-    {
-      "embedding": "pattern_stats",
-      "algorithm": "agglomerative",
-      "n_clusters": 3,
-      "silhouette": 0.2528,
-      "davies_bouldin": 0.9558
-    },
-    {
-      "embedding": "pattern_stats",
-      "algorithm": "kmeans",
-      "n_clusters": 3,
-      "silhouette": 0.2528,
-      "davies_bouldin": 0.9558
-    },
-    {
-      "embedding": "tfidf_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 4,
-      "silhouette": 0.2517,
-      "davies_bouldin": 1.1838
-    },
-    {
-      "embedding": "pattern_stats",
-      "algorithm": "agglomerative",
-      "n_clusters": 5,
-      "silhouette": 0.2481,
-      "davies_bouldin": 0.7443
-    },
-    {
-      "embedding": "count_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 6,
-      "silhouette": 0.2471,
-      "davies_bouldin": 0.726
-    },
-    {
-      "embedding": "count_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 5,
-      "silhouette": 0.2451,
-      "davies_bouldin": 0.8821
-    },
-    {
-      "embedding": "tfidf_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 4,
-      "silhouette": 0.2407,
-      "davies_bouldin": 1.0953
-    },
-    {
       "embedding": "count_svd",
       "algorithm": "kmeans",
       "n_clusters": 3,
       "silhouette": 0.2373,
       "davies_bouldin": 1.1281
-    },
-    {
-      "embedding": "tfidf_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 5,
-      "silhouette": 0.2345,
-      "davies_bouldin": 1.0561
-    },
-    {
-      "embedding": "count_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 7,
-      "silhouette": 0.2308,
-      "davies_bouldin": 0.6023
-    },
-    {
-      "embedding": "pattern_stats",
-      "algorithm": "kmeans",
-      "n_clusters": 4,
-      "silhouette": 0.2246,
-      "davies_bouldin": 0.9703
-    },
-    {
-      "embedding": "pattern_stats",
-      "algorithm": "agglomerative",
-      "n_clusters": 4,
-      "silhouette": 0.224,
-      "davies_bouldin": 0.9549
-    },
-    {
-      "embedding": "count_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 7,
-      "silhouette": 0.2233,
-      "davies_bouldin": 0.5865
-    },
-    {
-      "embedding": "tfidf_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 3,
-      "silhouette": 0.2222,
-      "davies_bouldin": 1.4302
-    },
-    {
-      "embedding": "pattern_stats",
-      "algorithm": "kmeans",
-      "n_clusters": 7,
-      "silhouette": 0.2204,
-      "davies_bouldin": 0.5858
-    },
-    {
-      "embedding": "pattern_stats",
-      "algorithm": "agglomerative",
-      "n_clusters": 7,
-      "silhouette": 0.2204,
-      "davies_bouldin": 0.5858
-    },
-    {
-      "embedding": "count_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 8,
-      "silhouette": 0.2186,
-      "davies_bouldin": 0.6311
-    },
-    {
-      "embedding": "count_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 8,
-      "silhouette": 0.2186,
-      "davies_bouldin": 0.6311
-    },
-    {
-      "embedding": "count_svd",
-      "algorithm": "agglomerative",
-      "n_clusters": 4,
-      "silhouette": 0.2172,
-      "davies_bouldin": 0.9349
-    },
-    {
-      "embedding": "tfidf_svd",
-      "algorithm": "kmeans",
-      "n_clusters": 3,
-      "silhouette": 0.2069,
-      "davies_bouldin": 1.4463
-    },
-    {
-      "embedding": "pattern_stats",
-      "algorithm": "kmeans",
-      "n_clusters": 8,
-      "silhouette": 0.204,
-      "davies_bouldin": 0.4796
-    },
-    {
-      "embedding": "pattern_stats",
-      "algorithm": "agglomerative",
-      "n_clusters": 8,
-      "silhouette": 0.204,
-      "davies_bouldin": 0.4796
     }
   ],
   "clusters": [
     {
       "cluster_id": 0,
-      "size": 4,
-      "share": 0.2857,
-      "hint": "motif=lldrr, end=(7,13)",
-      "avg_moves": 173.75,
-      "avg_overlaps": 14.75,
+      "size": 6,
+      "share": 0.4286,
+      "hint": "motif=lllll, end=(7,13)",
+      "avg_moves": 177.5,
+      "avg_overlaps": 18.5,
       "avg_open_cells": 160.0,
-      "avg_turn_rate": 0.4747,
-      "avg_run_length": 2.1037,
+      "avg_turn_rate": 0.3565,
+      "avg_run_length": 2.8116,
       "avg_move_fraction": {
-        "u": 0.1747,
-        "d": 0.2066,
-        "l": 0.2726,
-        "r": 0.3461
+        "u": 0.17,
+        "d": 0.2027,
+        "l": 0.2871,
+        "r": 0.3401
       },
       "source_counts": {
-        "human": 4
+        "human": 6
       },
       "top_motifs": [
         {
-          "motif": "lldrr",
-          "count": 17,
-          "lift": 1.7633
+          "motif": "lllll",
+          "count": 77,
+          "lift": 1.8605
         },
         {
-          "motif": "rrdll",
-          "count": 14,
-          "lift": 1.6942
+          "motif": "rrrul",
+          "count": 11,
+          "lift": 1.7365
         },
         {
-          "motif": "llldr",
-          "count": 13,
-          "lift": 1.5731
+          "motif": "rrrrr",
+          "count": 91,
+          "lift": 1.6449
         },
         {
-          "motif": "lllld",
-          "count": 16,
-          "lift": 1.5699
+          "motif": "urrrr",
+          "count": 19,
+          "lift": 1.5514
         },
         {
-          "motif": "rdlll",
-          "count": 9,
-          "lift": 1.5559
+          "motif": "llllu",
+          "count": 19,
+          "lift": 1.5514
         }
       ],
       "top_end_positions": [
         {
           "end_row": 7,
           "end_col": 13,
-          "count": 3
+          "count": 2
         },
         {
-          "end_row": 1,
-          "end_col": 12,
+          "end_row": 2,
+          "end_col": 11,
+          "count": 1
+        },
+        {
+          "end_row": 5,
+          "end_col": 1,
+          "count": 1
+        },
+        {
+          "end_row": 6,
+          "end_col": 7,
+          "count": 1
+        },
+        {
+          "end_row": 8,
+          "end_col": 11,
           "count": 1
         }
       ],
       "examples": [
         {
-          "index": 49,
+          "index": 42,
           "source": "human",
-          "source_id": "human-49",
+          "source_id": "human-42",
           "seed": 3,
-          "image": "human_images/human_config3_attempt0049.svg",
-          "distance_to_centroid": 2.3048,
-          "moves": 170,
-          "overlaps": 11,
+          "image": "human_images/human_config3_attempt0042.svg",
+          "distance_to_centroid": 14.0442,
+          "moves": 173,
+          "overlaps": 14,
+          "end": {
+            "row": 2,
+            "col": 11
+          },
+          "path_preview": "rrrrrrlldlllldddddrrdrrdddlllldd",
+          "user": "zizsmx",
+          "config_label": "config 3"
+        },
+        {
+          "index": 50,
+          "source": "human",
+          "source_id": "human-50",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0050.svg",
+          "distance_to_centroid": 14.6226,
+          "moves": 177,
+          "overlaps": 18,
+          "end": {
+            "row": 6,
+            "col": 7
+          },
+          "path_preview": "rrrrrrlldlllldddddruuuurrrrdllld",
+          "user": "rxswju",
+          "config_label": "config 3"
+        },
+        {
+          "index": 67,
+          "source": "human",
+          "source_id": "human-67",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0067.svg",
+          "distance_to_centroid": 16.8369,
+          "moves": 172,
+          "overlaps": 13,
           "end": {
             "row": 7,
             "col": 13
           },
-          "path_preview": "rrrrrrlldlllldrrrrrdllllldrrrrrd",
-          "user": "z7xngq",
+          "path_preview": "ddddddrrdrrdddlllldddrrrrrrrrrrr",
+          "user": "nnqd8q",
           "config_label": "config 3"
         },
         {
@@ -455,7 +182,7 @@
           "source_id": "human-56",
           "seed": 3,
           "image": "human_images/human_config3_attempt0056.svg",
-          "distance_to_centroid": 3.6162,
+          "distance_to_centroid": 23.2615,
           "moves": 172,
           "overlaps": 13,
           "end": {
@@ -467,12 +194,117 @@
           "config_label": "config 3"
         },
         {
+          "index": 22,
+          "source": "human",
+          "source_id": "human-22",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0022.svg",
+          "distance_to_centroid": 26.3512,
+          "moves": 182,
+          "overlaps": 23,
+          "end": {
+            "row": 5,
+            "col": 1
+          },
+          "path_preview": "rrrrrrllddrdrruruurrrrrddddddduu",
+          "user": "z4siol",
+          "config_label": "config 3"
+        }
+      ]
+    },
+    {
+      "cluster_id": 1,
+      "size": 5,
+      "share": 0.3571,
+      "hint": "motif=ldrrd, end=(7,13)",
+      "avg_moves": 179.0,
+      "avg_overlaps": 20.0,
+      "avg_open_cells": 160.0,
+      "avg_turn_rate": 0.4887,
+      "avg_run_length": 2.0398,
+      "avg_move_fraction": {
+        "u": 0.1887,
+        "d": 0.216,
+        "l": 0.2699,
+        "r": 0.3255
+      },
+      "source_counts": {
+        "human": 5
+      },
+      "top_motifs": [
+        {
+          "motif": "ldrrd",
+          "count": 8,
+          "lift": 1.8781
+        },
+        {
+          "motif": "lldrr",
+          "count": 21,
+          "lift": 1.6903
+        },
+        {
+          "motif": "rrdll",
+          "count": 17,
+          "lift": 1.5964
+        },
+        {
+          "motif": "llldr",
+          "count": 17,
+          "lift": 1.5964
+        },
+        {
+          "motif": "rrrdl",
+          "count": 14,
+          "lift": 1.5169
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 7,
+          "end_col": 13,
+          "count": 2
+        },
+        {
+          "end_row": 0,
+          "end_col": 6,
+          "count": 1
+        },
+        {
+          "end_row": 1,
+          "end_col": 4,
+          "count": 1
+        },
+        {
+          "end_row": 9,
+          "end_col": 13,
+          "count": 1
+        }
+      ],
+      "examples": [
+        {
+          "index": 63,
+          "source": "human",
+          "source_id": "human-63",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0063.svg",
+          "distance_to_centroid": 14.8638,
+          "moves": 176,
+          "overlaps": 17,
+          "end": {
+            "row": 0,
+            "col": 6
+          },
+          "path_preview": "rrrdllldrrrdllldrrrdllldrrdrurdd",
+          "user": "jww8vb",
+          "config_label": "config 3"
+        },
+        {
           "index": 37,
           "source": "human",
           "source_id": "human-37",
           "seed": 3,
           "image": "human_images/human_config3_attempt0037.svg",
-          "distance_to_centroid": 4.7193,
+          "distance_to_centroid": 17.3589,
           "moves": 174,
           "overlaps": 15,
           "end": {
@@ -484,12 +316,141 @@
           "config_label": "config 3"
         },
         {
+          "index": 49,
+          "source": "human",
+          "source_id": "human-49",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0049.svg",
+          "distance_to_centroid": 22.5295,
+          "moves": 170,
+          "overlaps": 11,
+          "end": {
+            "row": 7,
+            "col": 13
+          },
+          "path_preview": "rrrrrrlldlllldrrrrrdllllldrrrrrd",
+          "user": "z7xngq",
+          "config_label": "config 3"
+        },
+        {
+          "index": 38,
+          "source": "human",
+          "source_id": "human-38",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0038.svg",
+          "distance_to_centroid": 27.0352,
+          "moves": 195,
+          "overlaps": 36,
+          "end": {
+            "row": 1,
+            "col": 4
+          },
+          "path_preview": "rdldddddrrdrrddddddlllluuurrrddl",
+          "user": "nr2iov",
+          "config_label": "config 3"
+        },
+        {
+          "index": 71,
+          "source": "human",
+          "source_id": "human-71",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0071.svg",
+          "distance_to_centroid": 27.3243,
+          "moves": 180,
+          "overlaps": 21,
+          "end": {
+            "row": 9,
+            "col": 13
+          },
+          "path_preview": "rrrrrrlldlllldrrrrrdllllldrrrrdl",
+          "user": "pd8p8o",
+          "config_label": "config 3"
+        }
+      ]
+    },
+    {
+      "cluster_id": 2,
+      "size": 2,
+      "share": 0.1429,
+      "hint": "motif=ddruu, end=(1,12)",
+      "avg_moves": 177.5,
+      "avg_overlaps": 18.5,
+      "avg_open_cells": 160.0,
+      "avg_turn_rate": 0.4587,
+      "avg_run_length": 2.1716,
+      "avg_move_fraction": {
+        "u": 0.2564,
+        "d": 0.2847,
+        "l": 0.1942,
+        "r": 0.2647
+      },
+      "source_counts": {
+        "human": 2
+      },
+      "top_motifs": [
+        {
+          "motif": "ddruu",
+          "count": 10,
+          "lift": 2.7322
+        },
+        {
+          "motif": "uurdd",
+          "count": 8,
+          "lift": 2.3679
+        },
+        {
+          "motif": "uuuuu",
+          "count": 18,
+          "lift": 2.0624
+        },
+        {
+          "motif": "ddddd",
+          "count": 24,
+          "lift": 1.9597
+        },
+        {
+          "motif": "rrrrr",
+          "count": 10,
+          "lift": 0.5423
+        }
+      ],
+      "top_end_positions": [
+        {
+          "end_row": 1,
+          "end_col": 12,
+          "count": 1
+        },
+        {
+          "end_row": 9,
+          "end_col": 13,
+          "count": 1
+        }
+      ],
+      "examples": [
+        {
+          "index": 29,
+          "source": "human",
+          "source_id": "human-29",
+          "seed": 3,
+          "image": "human_images/human_config3_attempt0029.svg",
+          "distance_to_centroid": 13.7133,
+          "moves": 176,
+          "overlaps": 17,
+          "end": {
+            "row": 9,
+            "col": 13
+          },
+          "path_preview": "rrrrrrlldlllldrrrrrdllllldddruur",
+          "user": "02w4ix",
+          "config_label": "config 3"
+        },
+        {
           "index": 75,
           "source": "human",
           "source_id": "human-75",
           "seed": 3,
           "image": "human_images/human_config3_attempt0075.svg",
-          "distance_to_centroid": 8.3809,
+          "distance_to_centroid": 13.7133,
           "moves": 179,
           "overlaps": 20,
           "end": {
@@ -503,404 +464,7 @@
       ]
     },
     {
-      "cluster_id": 1,
-      "size": 3,
-      "share": 0.2143,
-      "hint": "motif=rrrru, end=(0,6)",
-      "avg_moves": 173.667,
-      "avg_overlaps": 14.667,
-      "avg_open_cells": 160.0,
-      "avg_turn_rate": 0.391,
-      "avg_run_length": 2.6605,
-      "avg_move_fraction": {
-        "u": 0.1668,
-        "d": 0.1842,
-        "l": 0.2957,
-        "r": 0.3534
-      },
-      "source_counts": {
-        "human": 3
-      },
-      "top_motifs": [
-        {
-          "motif": "rrrru",
-          "count": 11,
-          "lift": 2.2196
-        },
-        {
-          "motif": "lurrr",
-          "count": 9,
-          "lift": 2.1793
-        },
-        {
-          "motif": "llllu",
-          "count": 13,
-          "lift": 2.1709
-        },
-        {
-          "motif": "lllur",
-          "count": 10,
-          "lift": 1.9371
-        },
-        {
-          "motif": "ullll",
-          "count": 8,
-          "lift": 1.8449
-        }
-      ],
-      "top_end_positions": [
-        {
-          "end_row": 0,
-          "end_col": 6,
-          "count": 1
-        },
-        {
-          "end_row": 2,
-          "end_col": 11,
-          "count": 1
-        },
-        {
-          "end_row": 7,
-          "end_col": 13,
-          "count": 1
-        }
-      ],
-      "examples": [
-        {
-          "index": 42,
-          "source": "human",
-          "source_id": "human-42",
-          "seed": 3,
-          "image": "human_images/human_config3_attempt0042.svg",
-          "distance_to_centroid": 3.5005,
-          "moves": 173,
-          "overlaps": 14,
-          "end": {
-            "row": 2,
-            "col": 11
-          },
-          "path_preview": "rrrrrrlldlllldddddrrdrrdddlllldd",
-          "user": "zizsmx",
-          "config_label": "config 3"
-        },
-        {
-          "index": 67,
-          "source": "human",
-          "source_id": "human-67",
-          "seed": 3,
-          "image": "human_images/human_config3_attempt0067.svg",
-          "distance_to_centroid": 5.358,
-          "moves": 172,
-          "overlaps": 13,
-          "end": {
-            "row": 7,
-            "col": 13
-          },
-          "path_preview": "ddddddrrdrrdddlllldddrrrrrrrrrrr",
-          "user": "nnqd8q",
-          "config_label": "config 3"
-        },
-        {
-          "index": 63,
-          "source": "human",
-          "source_id": "human-63",
-          "seed": 3,
-          "image": "human_images/human_config3_attempt0063.svg",
-          "distance_to_centroid": 7.1571,
-          "moves": 176,
-          "overlaps": 17,
-          "end": {
-            "row": 0,
-            "col": 6
-          },
-          "path_preview": "rrrdllldrrrdllldrrrdllldrrdrurdd",
-          "user": "jww8vb",
-          "config_label": "config 3"
-        }
-      ]
-    },
-    {
-      "cluster_id": 2,
-      "size": 2,
-      "share": 0.1429,
-      "hint": "motif=lllll, end=(5,1)",
-      "avg_moves": 179.5,
-      "avg_overlaps": 20.5,
-      "avg_open_cells": 160.0,
-      "avg_turn_rate": 0.3783,
-      "avg_run_length": 2.6208,
-      "avg_move_fraction": {
-        "u": 0.1862,
-        "d": 0.2169,
-        "l": 0.2872,
-        "r": 0.3097
-      },
-      "source_counts": {
-        "human": 2
-      },
-      "top_motifs": [
-        {
-          "motif": "lllll",
-          "count": 30,
-          "lift": 2.1498
-        },
-        {
-          "motif": "urrrr",
-          "count": 8,
-          "lift": 1.9373
-        },
-        {
-          "motif": "rrrrr",
-          "count": 26,
-          "lift": 1.3938
-        }
-      ],
-      "top_end_positions": [
-        {
-          "end_row": 5,
-          "end_col": 1,
-          "count": 1
-        },
-        {
-          "end_row": 6,
-          "end_col": 7,
-          "count": 1
-        }
-      ],
-      "examples": [
-        {
-          "index": 22,
-          "source": "human",
-          "source_id": "human-22",
-          "seed": 3,
-          "image": "human_images/human_config3_attempt0022.svg",
-          "distance_to_centroid": 9.6733,
-          "moves": 182,
-          "overlaps": 23,
-          "end": {
-            "row": 5,
-            "col": 1
-          },
-          "path_preview": "rrrrrrllddrdrruruurrrrrddddddduu",
-          "user": "z4siol",
-          "config_label": "config 3"
-        },
-        {
-          "index": 50,
-          "source": "human",
-          "source_id": "human-50",
-          "seed": 3,
-          "image": "human_images/human_config3_attempt0050.svg",
-          "distance_to_centroid": 9.6733,
-          "moves": 177,
-          "overlaps": 18,
-          "end": {
-            "row": 6,
-            "col": 7
-          },
-          "path_preview": "rrrrrrlldlllldddddruuuurrrrdllld",
-          "user": "rxswju",
-          "config_label": "config 3"
-        }
-      ]
-    },
-    {
       "cluster_id": 3,
-      "size": 2,
-      "share": 0.1429,
-      "hint": "motif=uuuuu, end=(9,13)",
-      "avg_moves": 178.0,
-      "avg_overlaps": 19.0,
-      "avg_open_cells": 160.0,
-      "avg_turn_rate": 0.4574,
-      "avg_run_length": 2.1773,
-      "avg_move_fraction": {
-        "u": 0.2362,
-        "d": 0.2868,
-        "l": 0.202,
-        "r": 0.275
-      },
-      "source_counts": {
-        "human": 2
-      },
-      "top_motifs": [
-        {
-          "motif": "uuuuu",
-          "count": 22,
-          "lift": 2.5134
-        },
-        {
-          "motif": "lllld",
-          "count": 8,
-          "lift": 1.5315
-        },
-        {
-          "motif": "ddddd",
-          "count": 18,
-          "lift": 1.4655
-        },
-        {
-          "motif": "rrrrr",
-          "count": 9,
-          "lift": 0.4866
-        }
-      ],
-      "top_end_positions": [
-        {
-          "end_row": 9,
-          "end_col": 13,
-          "count": 2
-        }
-      ],
-      "examples": [
-        {
-          "index": 71,
-          "source": "human",
-          "source_id": "human-71",
-          "seed": 3,
-          "image": "human_images/human_config3_attempt0071.svg",
-          "distance_to_centroid": 3.5147,
-          "moves": 180,
-          "overlaps": 21,
-          "end": {
-            "row": 9,
-            "col": 13
-          },
-          "path_preview": "rrrrrrlldlllldrrrrrdllllldrrrrdl",
-          "user": "pd8p8o",
-          "config_label": "config 3"
-        },
-        {
-          "index": 29,
-          "source": "human",
-          "source_id": "human-29",
-          "seed": 3,
-          "image": "human_images/human_config3_attempt0029.svg",
-          "distance_to_centroid": 3.5147,
-          "moves": 176,
-          "overlaps": 17,
-          "end": {
-            "row": 9,
-            "col": 13
-          },
-          "path_preview": "rrrrrrlldlllldrrrrrdllllldddruur",
-          "user": "02w4ix",
-          "config_label": "config 3"
-        }
-      ]
-    },
-    {
-      "cluster_id": 4,
-      "size": 1,
-      "share": 0.0714,
-      "hint": "motif=ddddd, end=(8,11)",
-      "avg_moves": 189.0,
-      "avg_overlaps": 30.0,
-      "avg_open_cells": 160.0,
-      "avg_turn_rate": 0.3085,
-      "avg_run_length": 3.2034,
-      "avg_move_fraction": {
-        "u": 0.2063,
-        "d": 0.2487,
-        "l": 0.2434,
-        "r": 0.3016
-      },
-      "source_counts": {
-        "human": 1
-      },
-      "top_motifs": [
-        {
-          "motif": "ddddd",
-          "count": 10,
-          "lift": 1.5315
-        },
-        {
-          "motif": "rrrrr",
-          "count": 14,
-          "lift": 1.424
-        },
-        {
-          "motif": "lllll",
-          "count": 9,
-          "lift": 1.2237
-        }
-      ],
-      "top_end_positions": [
-        {
-          "end_row": 8,
-          "end_col": 11,
-          "count": 1
-        }
-      ],
-      "examples": [
-        {
-          "index": 30,
-          "source": "human",
-          "source_id": "human-30",
-          "seed": 3,
-          "image": "human_images/human_config3_attempt0030.svg",
-          "distance_to_centroid": 0.0,
-          "moves": 189,
-          "overlaps": 30,
-          "end": {
-            "row": 8,
-            "col": 11
-          },
-          "path_preview": "rrrrrrlldlllldrrrrrdddddddddddll",
-          "user": "wp57tp",
-          "config_label": "config 3"
-        }
-      ]
-    },
-    {
-      "cluster_id": 5,
-      "size": 1,
-      "share": 0.0714,
-      "hint": "motif=, end=(1,4)",
-      "avg_moves": 195.0,
-      "avg_overlaps": 36.0,
-      "avg_open_cells": 160.0,
-      "avg_turn_rate": 0.4485,
-      "avg_run_length": 2.2159,
-      "avg_move_fraction": {
-        "u": 0.2256,
-        "d": 0.2308,
-        "l": 0.2615,
-        "r": 0.2821
-      },
-      "source_counts": {
-        "human": 1
-      },
-      "top_motifs": [],
-      "top_end_positions": [
-        {
-          "end_row": 1,
-          "end_col": 4,
-          "count": 1
-        }
-      ],
-      "examples": [
-        {
-          "index": 38,
-          "source": "human",
-          "source_id": "human-38",
-          "seed": 3,
-          "image": "human_images/human_config3_attempt0038.svg",
-          "distance_to_centroid": 0.0,
-          "moves": 195,
-          "overlaps": 36,
-          "end": {
-            "row": 1,
-            "col": 4
-          },
-          "path_preview": "rdldddddrrdrrddddddlllluuurrrddl",
-          "user": "nr2iov",
-          "config_label": "config 3"
-        }
-      ]
-    },
-    {
-      "cluster_id": 6,
       "size": 1,
       "share": 0.0714,
       "hint": "motif=uuuuu, end=(9,13)",
