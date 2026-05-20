@@ -15,8 +15,12 @@ from urllib.parse import parse_qs, urlparse
 if __package__ in (None, ""):
     sys.path.append(str(FilePath(__file__).resolve().parents[1]))
 
-from src.grid import create_random_grid
-from src.optimal_solver import SearchProgress, optimal_solver
+from src.concorde import concorde_solver
+from src.grid import (
+    create_random_grid,
+    default_cluster_count_range,
+    default_cluster_size_range,
+)
 from src.shared_types import MOVE_DELTAS, Grid, Path as SolverPath, Point
 from src.solvers import (
     find_start,
@@ -31,7 +35,6 @@ from src.visualize import calculate_visit_counts, trace_path_points
 SOLVER_OPTIONS = {"snake", "spiral", "random_walk", "memetic_ga", "optimal"}
 STRATEGY_OPTIONS = {"least_overlap", "shortest"}
 START_OPTIONS = {"auto", "down", "right"}
-OPTIMAL_PROGRESS_INTERVAL_SECONDS = 1.0
 DEFAULT_REMOVED_FRACTION_RANGE = (0.18, 0.42)
 SOLVER_LABELS = {
     "snake": "Snake",
@@ -43,6 +46,12 @@ SOLVER_LABELS = {
 HUMAN_RESULTS_PATH = (
     FilePath(__file__).resolve().parents[1] / "data" / "mow_test_rows.csv"
 )
+HARD_LEVELS_CSV_PATH = (
+    FilePath(__file__).resolve().parents[1]
+    / "analysis"
+    / "hard_levels_candidates.csv"
+)
+HARD_LEVELS_DEFAULT_TOP = 20
 HUMAN_CONFIG_SPECS = {
     0: {"size": 7, "seed": 59},
     1: {"size": 7, "seed": 59},
@@ -121,10 +130,8 @@ def solve_snapshot(
         path = memetic_ga_solver(grid, rng=random.Random(seed))
         detail_label = f"memetic genetic search ({seed})"
     elif solver_key == "optimal":
-        path = optimal_solver(
-            grid, progress_reporter=lambda message: print(message, flush=True)
-        )
-        detail_label = "exact branch-and-bound"
+        path = concorde_solver(grid)
+        detail_label = "concorde TSP"
     else:
         raise ValueError(f"Unknown solver: {solver_key}")
 
@@ -163,34 +170,22 @@ def build_solution_snapshot(
     )
 
 
-def build_progress_payload(grid: Grid, progress: SearchProgress) -> dict[str, object]:
-    snapshot = build_solution_snapshot(
-        grid,
-        "optimal",
-        "best so far",
-        progress.best_path,
-    )
-    return {
-        "type": "progress",
-        "phase": progress.phase,
-        "message": progress.message,
-        "elapsedSeconds": progress.elapsed_seconds,
-        "statesExplored": progress.states_explored,
-        "statesPerSecond": progress.states_per_second,
-        "bestLength": progress.best_length,
-        "maxVisitedCells": progress.max_visited_cells,
-        "nodeCount": progress.node_count,
-        "prunedBranches": progress.pruned_branches,
-        "solution": snapshot.to_dict(),
-    }
-
-
 def build_grid_payload(
     size: int,
     seed: int,
     removed_fraction_range: tuple[float, float],
+    cluster_count_range: tuple[int, int] | None = None,
+    cluster_size_range: tuple[int, int] | None = None,
 ) -> dict[str, object]:
-    grid = create_random_grid(size, seed, removed_fraction_range=removed_fraction_range)
+    resolved_count_range = cluster_count_range or default_cluster_count_range(size)
+    resolved_size_range = cluster_size_range or default_cluster_size_range(size)
+    grid = create_random_grid(
+        size,
+        seed,
+        removed_fraction_range=removed_fraction_range,
+        cluster_count_range=resolved_count_range,
+        cluster_size_range=resolved_size_range,
+    )
     rows = len(grid)
     cols = len(grid[0]) if rows else 0
     open_cells = count_open_cells(grid)
@@ -201,6 +196,8 @@ def build_grid_payload(
         "size": size,
         "seed": seed,
         "removedFractionRange": list(removed_fraction_range),
+        "clusterCountRange": list(resolved_count_range),
+        "clusterSizeRange": list(resolved_size_range),
         "rows": rows,
         "cols": cols,
         "openCells": open_cells,
@@ -292,6 +289,73 @@ def build_human_attempt_payload(
     }
 
 
+def _parse_optional_float(raw: str) -> float | None:
+    if raw == "":
+        return None
+    return float(raw)
+
+
+def load_hard_levels_payload(top_n: int = HARD_LEVELS_DEFAULT_TOP) -> dict[str, object]:
+    if not HARD_LEVELS_CSV_PATH.exists():
+        return {
+            "available": False,
+            "message": (
+                f"Hard-levels CSV not found at {HARD_LEVELS_CSV_PATH}. "
+                "Run `uv run python analysis/hard_levels.py` to generate it."
+            ),
+            "candidates": [],
+        }
+
+    candidates: list[dict[str, object]] = []
+    with HARD_LEVELS_CSV_PATH.open(newline="", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            rank = int(row["rank"])
+            if rank > top_n:
+                continue
+            alt_fraction = _parse_optional_float(row.get("alt_optima_fraction", ""))
+            candidates.append(
+                {
+                    "rank": rank,
+                    "score": float(row["score"]),
+                    "regime": row["regime"],
+                    "size": int(row["size"]),
+                    "seed": int(row["seed"]),
+                    "clusterCountRange": [
+                        int(row["cluster_count_min"]),
+                        int(row["cluster_count_max"]),
+                    ],
+                    "clusterSizeRange": [
+                        int(row["cluster_size_min"]),
+                        int(row["cluster_size_max"]),
+                    ],
+                    "removedFractionRange": [
+                        float(row["removed_min"]),
+                        float(row["removed_max"]),
+                    ],
+                    "metrics": {
+                        "openCells": int(row["open_cells"]),
+                        "optimalMoves": int(row["optimal_moves"]),
+                        "optimalOverlap": int(row["optimal_overlap"]),
+                        "snakeMoves": int(row["snake_moves"]),
+                        "spiralMoves": int(row["spiral_moves"]),
+                        "heuristicGap": float(row["heuristic_gap"]),
+                        "turnDensity": float(row["turn_density"]),
+                        "bridges": int(row["bridges"]),
+                        "choicePoints": int(row["choice_points"]),
+                        "altOptimaFraction": alt_fraction,
+                    },
+                }
+            )
+
+    candidates.sort(key=lambda c: c["rank"])
+    return {
+        "available": True,
+        "candidates": candidates,
+        "source": str(HARD_LEVELS_CSV_PATH.relative_to(HARD_LEVELS_CSV_PATH.parents[1])),
+    }
+
+
 def load_human_results_payload() -> dict[str, object]:
     if not HUMAN_RESULTS_PATH.exists():
         raise FileNotFoundError(f"Human results file not found: {HUMAN_RESULTS_PATH}")
@@ -351,18 +415,23 @@ class MowUIHandler(SimpleHTTPRequestHandler):
             self._handle_human_results()
             return
 
+        if parsed.path == "/api/hard-levels":
+            self._handle_hard_levels()
+            return
+
         if parsed.path == "/":
             self.path = "/index.html"
 
         super().do_GET()
 
+    def end_headers(self) -> None:
+        self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
         if parsed.path == "/api/solve":
             self._handle_solve()
-            return
-        if parsed.path == "/api/solve-stream":
-            self._handle_solve_stream()
             return
 
         self.send_error(HTTPStatus.NOT_FOUND, "Unknown API route")
@@ -393,11 +462,19 @@ class MowUIHandler(SimpleHTTPRequestHandler):
     def _handle_grid(self, query: str) -> None:
         params = parse_qs(query)
 
+        def optional_int(key: str) -> int | None:
+            raw = params.get(key, [""])[0]
+            return int(raw) if raw != "" else None
+
         try:
             size = int(params.get("size", ["7"])[0])
             seed = int(params.get("seed", ["7"])[0])
             removed_min = float(params.get("removedMin", ["0.18"])[0])
             removed_max = float(params.get("removedMax", ["0.42"])[0])
+            cluster_count_min = optional_int("clusterCountMin")
+            cluster_count_max = optional_int("clusterCountMax")
+            cluster_size_min = optional_int("clusterSizeMin")
+            cluster_size_max = optional_int("clusterSizeMax")
         except ValueError as exc:
             self._send_json({"error": f"Invalid grid parameters: {exc}"}, status=400)
             return
@@ -415,7 +492,41 @@ class MowUIHandler(SimpleHTTPRequestHandler):
             )
             return
 
-        payload = build_grid_payload(size, seed, (removed_min, removed_max))
+        cluster_count_range: tuple[int, int] | None = None
+        if cluster_count_min is not None or cluster_count_max is not None:
+            default_lo, default_hi = default_cluster_count_range(size)
+            cluster_count_range = (
+                cluster_count_min if cluster_count_min is not None else default_lo,
+                cluster_count_max if cluster_count_max is not None else default_hi,
+            )
+            if cluster_count_range[0] < 1 or cluster_count_range[1] < cluster_count_range[0]:
+                self._send_json(
+                    {"error": "clusterCount range must satisfy 1 <= min <= max"},
+                    status=400,
+                )
+                return
+
+        cluster_size_range: tuple[int, int] | None = None
+        if cluster_size_min is not None or cluster_size_max is not None:
+            default_lo, default_hi = default_cluster_size_range(size)
+            cluster_size_range = (
+                cluster_size_min if cluster_size_min is not None else default_lo,
+                cluster_size_max if cluster_size_max is not None else default_hi,
+            )
+            if cluster_size_range[0] < 1 or cluster_size_range[1] < cluster_size_range[0]:
+                self._send_json(
+                    {"error": "clusterSize range must satisfy 1 <= min <= max"},
+                    status=400,
+                )
+                return
+
+        payload = build_grid_payload(
+            size,
+            seed,
+            (removed_min, removed_max),
+            cluster_count_range,
+            cluster_size_range,
+        )
         self._send_json(payload)
 
     def _handle_human_results(self) -> None:
@@ -424,6 +535,15 @@ class MowUIHandler(SimpleHTTPRequestHandler):
         except FileNotFoundError as exc:
             self._send_json({"error": str(exc)}, status=404)
             return
+        except Exception as exc:
+            self._send_json({"error": str(exc)}, status=500)
+            return
+
+        self._send_json(payload)
+
+    def _handle_hard_levels(self) -> None:
+        try:
+            payload = load_hard_levels_payload()
         except Exception as exc:
             self._send_json({"error": str(exc)}, status=500)
             return
@@ -453,71 +573,6 @@ class MowUIHandler(SimpleHTTPRequestHandler):
 
         self._send_json({"solution": snapshot.to_dict()})
 
-    def _handle_solve_stream(self) -> None:
-        try:
-            body = self._read_json_body()
-        except json.JSONDecodeError as exc:
-            self._send_json({"error": f"Invalid JSON body: {exc}"}, status=400)
-            return
-
-        try:
-            grid, solver_key, _, _, _ = self._parse_solve_request(body)
-        except ValueError as exc:
-            self._send_json({"error": str(exc)}, status=400)
-            return
-
-        if solver_key != "optimal":
-            self._send_json(
-                {"error": "Streaming solve is only available for the optimal solver"},
-                status=400,
-            )
-            return
-
-        self.send_response(HTTPStatus.OK)
-        self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
-        self.send_header("Cache-Control", "no-store")
-        self.send_header("Connection", "close")
-        self.end_headers()
-        self.close_connection = True
-
-        def send_event(payload: dict[str, object]) -> None:
-            encoded = (json.dumps(payload) + "\n").encode("utf-8")
-            self.wfile.write(encoded)
-            self.wfile.flush()
-
-        def handle_progress(progress: SearchProgress) -> None:
-            if progress.phase == "finished":
-                return
-            send_event(build_progress_payload(grid, progress))
-
-        try:
-            path = optimal_solver(
-                grid,
-                progress_reporter=lambda message: print(message, flush=True),
-                progress_callback=handle_progress,
-                progress_interval_seconds=OPTIMAL_PROGRESS_INTERVAL_SECONDS,
-            )
-            snapshot = build_solution_snapshot(
-                grid,
-                "optimal",
-                "exact branch-and-bound",
-                path,
-            )
-            send_event(
-                {
-                    "type": "solution",
-                    "message": "Optimal solver finished.",
-                    "solution": snapshot.to_dict(),
-                }
-            )
-        except (BrokenPipeError, ConnectionResetError):
-            return
-        except Exception as exc:
-            try:
-                send_event({"type": "error", "error": str(exc)})
-            except (BrokenPipeError, ConnectionResetError):
-                pass
-
     def _read_json_body(self) -> object:
         content_length = int(self.headers.get("Content-Length", "0"))
         raw = self.rfile.read(content_length)
@@ -528,7 +583,6 @@ class MowUIHandler(SimpleHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(encoded)))
-        self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(encoded)
 

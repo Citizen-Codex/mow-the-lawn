@@ -8,8 +8,8 @@ import sys
 if __package__ in (None, ""):
     sys.path.append(str(Path(__file__).resolve().parents[2]))
 
+from src.concorde import concorde_solver
 from src.grid import create_random_grid
-from src.optimal_solver import optimal_solver
 from src.shared_types import Grid, Path as SolverPath, Point
 from src.visualize import calculate_visit_counts, trace_path_points
 
@@ -213,7 +213,7 @@ def generate_optimal_library(
         size = size_rng.randint(min_size, max_size)
         seed = base_seed + index
         grid = create_random_grid(size, seed)
-        path = optimal_solver(grid)
+        path = concorde_solver(grid)
         points = trace_path_points(path)
         start: Point | None = path["start"]
 

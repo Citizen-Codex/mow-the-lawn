@@ -5,7 +5,7 @@ Mow The Lawn is a small Python project for generating connected random lawn grid
 ## Project purpose
 
 - Generate deterministic random grids from a size and seed.
-- Compare heuristic traversal strategies, a memetic genetic solver, and an exact branch-and-bound solver.
+- Compare heuristic traversal strategies, a memetic genetic solver, and a Concorde-backed exact solver.
 - Visualize base grids and computed paths.
 - Simulate many grids to build labelled training data (`snake_path`, `spiral_path`, `random_walk_path`).
 
@@ -21,7 +21,7 @@ Mow The Lawn is a small Python project for generating connected random lawn grid
 - `src/solvers.py`: Snake/spiral/random-walk solvers, pathing strategies (`shortest`, `least_overlap`), and the shared fixed-start/path helpers.
 - `src/simple_rl_solver/`: Minimal RL baseline with a flat observation, simple reward landscape, and masked PPO.
 - `src/memetic_solver/`: Structure-aware memetic genetic solver for fast near-optimal coverage paths.
-- `src/optimal_solver.py`: Exact `optimal_solver()` branch-and-bound search for minimum-move full coverage.
+- `src/concorde/`: Exact `concorde_solver()` that reduces the coverage problem to symmetric TSP and solves it with Concorde.
 - `src/visualize.py`: Tkinter visualization helpers and path statistics.
 - `src/shared_types.py`: Shared types (`Grid`, `Path`, moves, and deltas).
 - `data/labelled_paths.csv`: Example generated dataset.
@@ -143,9 +143,6 @@ uv run src/simple_rl_solver/visualize.py --model data/rl/simple_maskable_ppo_6x6
 
 - Tkinter windows may not open in headless environments; CLI output still runs.
 - Use the same seed to reproduce the same generated grid for a given size.
-- Interactive exact solves now print periodic progress snapshots to the terminal while the branch-and-bound search is running.
-- Running `src/optimal_solver.py` with path visualization enabled now redraws the Tk window with the current best-so-far exact path during the search.
-- The browser UI also streams those exact-solver updates and redraws the best-so-far path on the grid while the search is in progress.
-- The browser UI includes a `memetic_ga` solver option for faster near-optimal paths without running the full exact search.
-- `optimal_solver()` is exact for the fixed start chosen by `find_start()`, but it is still exponential. It is most useful for smaller grids, solver benchmarking, and validating heuristic output.
+- The browser UI's `optimal` option is backed by `concorde_solver()`, which reduces the coverage problem to symmetric TSP and solves it with Concorde — fast and exact even on larger grids.
+- The browser UI also includes a `memetic_ga` solver option for faster near-optimal paths when an exact solve isn't needed.
 - The older `src/rl_solver/` PPO stack is still present. The new `src/simple_rl_solver/` package is a separate baseline rather than a rewrite of that stack.

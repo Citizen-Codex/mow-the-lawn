@@ -4,10 +4,9 @@ import random
 from src.concorde import concorde_solver
 from src.grid import create_random_grid
 from src.solvers import random_walk_solver, snake_solver, spiral_solver
-from src.optimal_solver import optimal_solver
 from src.visualize import path_stats, show_grid_path_tk, show_grid_tk
 
-SOLVERS = ["snake", "spiral", "random_walk", "optimal", "concorde"]
+SOLVERS = ["snake", "spiral", "random_walk", "concorde"]
 
 
 def main(n: int, seed: int, skip: set[str]):
@@ -46,21 +45,6 @@ def main(n: int, seed: int, skip: set[str]):
         if not launched:
             print(
                 "Random walk path visualizer could not start (likely no display environment)."
-            )
-
-    if "optimal" not in skip:
-        optimal_path = optimal_solver(
-            demo_grid,
-            progress_reporter=lambda message: print(message, flush=True),
-        )
-        print(path_stats(optimal_path))
-        print("Launching optimal path visualizer...")
-        launched = show_grid_path_tk(
-            demo_grid, optimal_path, title="Optimal Path Visualizer"
-        )
-        if not launched:
-            print(
-                "Optimal path visualizer could not start (likely no display environment)."
             )
 
     if "concorde" not in skip:

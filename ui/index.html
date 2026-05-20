@@ -42,6 +42,29 @@
               <input id="removedMaxInput" type="number" min="0" max="0.99" step="0.01" value="0.42">
             </label>
           </div>
+          <div class="inline-grid">
+            <label>
+              <span>Cluster count min</span>
+              <input id="clusterCountMinInput" type="number" min="1" step="1" placeholder="auto">
+            </label>
+            <label>
+              <span>Cluster count max</span>
+              <input id="clusterCountMaxInput" type="number" min="1" step="1" placeholder="auto">
+            </label>
+          </div>
+          <div class="inline-grid">
+            <label>
+              <span>Cluster size min</span>
+              <input id="clusterSizeMinInput" type="number" min="1" step="1" placeholder="auto">
+            </label>
+            <label>
+              <span>Cluster size max</span>
+              <input id="clusterSizeMaxInput" type="number" min="1" step="1" placeholder="auto">
+            </label>
+          </div>
+          <p class="subtle small">
+            Leave cluster fields blank for size-scaled defaults. Many small clusters disperse obstacles; one large cluster forms a single mass.
+          </p>
           <button id="generateButton" type="button">Generate grid</button>
         </section>
 
@@ -80,7 +103,7 @@
             <button id="optimalButton" type="button" class="secondary">Load optimal reference</button>
           </div>
           <p class="subtle small">
-            Exact solving is exponential. The app warns before running it on larger or denser grids.
+            Optimal solving is backed by Concorde via a TSP reduction and is fast even on larger grids.
           </p>
         </section>
 
@@ -101,6 +124,21 @@
             Start manual input, then use the arrow keys to move through open cells. Press <code>Backspace</code> to undo the last move.
           </p>
           <p id="manualStats" class="summary-line"></p>
+        </section>
+
+        <section class="card hard-levels-card">
+          <div class="card-head">
+            <h2>Hard Levels</h2>
+            <span id="hardLevelsChip" class="chip chip-idle">loading</span>
+          </div>
+          <label>
+            <span>Candidate</span>
+            <select id="hardLevelSelect"></select>
+          </label>
+          <p id="hardLevelSummary" class="summary-line"></p>
+          <p class="subtle small">
+            Surfaced by the candidate sweep in <code>analysis/hard_levels.py</code>. Selecting a candidate fills the grid form and regenerates.
+          </p>
         </section>
 
         <section class="card human-results-card">

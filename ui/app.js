@@ -17,6 +17,9 @@ const state = {
   humanResultsError: null,
   selectedHumanConfigId: null,
   selectedHumanAttemptId: null,
+  hardLevels: null,
+  hardLevelsError: null,
+  selectedHardLevelRank: null,
 };
 
 const elements = {
@@ -24,6 +27,10 @@ const elements = {
   seedInput: document.getElementById("seedInput"),
   removedMinInput: document.getElementById("removedMinInput"),
   removedMaxInput: document.getElementById("removedMaxInput"),
+  clusterCountMinInput: document.getElementById("clusterCountMinInput"),
+  clusterCountMaxInput: document.getElementById("clusterCountMaxInput"),
+  clusterSizeMinInput: document.getElementById("clusterSizeMinInput"),
+  clusterSizeMaxInput: document.getElementById("clusterSizeMaxInput"),
   randomizeSeedButton: document.getElementById("randomizeSeedButton"),
   generateButton: document.getElementById("generateButton"),
   solverSelect: document.getElementById("solverSelect"),
@@ -44,6 +51,9 @@ const elements = {
   humanNextButton: document.getElementById("humanNextButton"),
   humanResultsSummary: document.getElementById("humanResultsSummary"),
   humanAttemptSummary: document.getElementById("humanAttemptSummary"),
+  hardLevelsChip: document.getElementById("hardLevelsChip"),
+  hardLevelSelect: document.getElementById("hardLevelSelect"),
+  hardLevelSummary: document.getElementById("hardLevelSummary"),
   prevButton: document.getElementById("prevButton"),
   playButton: document.getElementById("playButton"),
   nextButton: document.getElementById("nextButton"),
@@ -70,11 +80,27 @@ function randomizeSeed() {
   elements.seedInput.value = String(Math.floor(Math.random() * 1_000_000));
 }
 
+function readOptionalInt(input, label) {
+  const raw = input.value.trim();
+  if (raw === "") {
+    return null;
+  }
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`${label} must be a positive integer or blank.`);
+  }
+  return value;
+}
+
 function readGridOptions() {
   const size = Number(elements.sizeInput.value);
   const seed = Number(elements.seedInput.value);
   const removedMin = Number(elements.removedMinInput.value);
   const removedMax = Number(elements.removedMaxInput.value);
+  const clusterCountMin = readOptionalInt(elements.clusterCountMinInput, "Cluster count min");
+  const clusterCountMax = readOptionalInt(elements.clusterCountMaxInput, "Cluster count max");
+  const clusterSizeMin = readOptionalInt(elements.clusterSizeMinInput, "Cluster size min");
+  const clusterSizeMax = readOptionalInt(elements.clusterSizeMaxInput, "Cluster size max");
 
   if (!Number.isInteger(size) || size <= 0) {
     throw new Error("Grid size must be a positive integer.");
@@ -85,8 +111,23 @@ function readGridOptions() {
   if (!(removedMin >= 0 && removedMin <= removedMax && removedMax < 1)) {
     throw new Error("Removed fractions must satisfy 0 <= min <= max < 1.");
   }
+  if (clusterCountMin !== null && clusterCountMax !== null && clusterCountMin > clusterCountMax) {
+    throw new Error("Cluster count min must be <= max.");
+  }
+  if (clusterSizeMin !== null && clusterSizeMax !== null && clusterSizeMin > clusterSizeMax) {
+    throw new Error("Cluster size min must be <= max.");
+  }
 
-  return { size, seed, removedMin, removedMax };
+  return {
+    size,
+    seed,
+    removedMin,
+    removedMax,
+    clusterCountMin,
+    clusterCountMax,
+    clusterSizeMin,
+    clusterSizeMax,
+  };
 }
 
 async function fetchJson(url, options = {}) {
@@ -96,58 +137,6 @@ async function fetchJson(url, options = {}) {
     throw new Error(payload.error || `Request failed with status ${response.status}`);
   }
   return payload;
-}
-
-async function readErrorMessage(response) {
-  const raw = await response.text();
-  if (!raw) {
-    return `Request failed with status ${response.status}`;
-  }
-
-  try {
-    const payload = JSON.parse(raw);
-    return payload.error || `Request failed with status ${response.status}`;
-  } catch {
-    return raw;
-  }
-}
-
-async function streamJsonLines(url, options = {}, { onMessage } = {}) {
-  const response = await fetch(url, options);
-  if (!response.ok) {
-    throw new Error(await readErrorMessage(response));
-  }
-  if (!response.body) {
-    throw new Error("Streaming responses are not available in this browser.");
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-
-  while (true) {
-    const { value, done } = await reader.read();
-    buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
-
-    let newlineIndex = buffer.indexOf("\n");
-    while (newlineIndex !== -1) {
-      const line = buffer.slice(0, newlineIndex).trim();
-      buffer = buffer.slice(newlineIndex + 1);
-      if (line) {
-        onMessage?.(JSON.parse(line));
-      }
-      newlineIndex = buffer.indexOf("\n");
-    }
-
-    if (done) {
-      break;
-    }
-  }
-
-  const trailing = buffer.trim();
-  if (trailing) {
-    onMessage?.(JSON.parse(trailing));
-  }
 }
 
 function escapeHtml(value) {
@@ -301,6 +290,43 @@ async function loadHumanResults() {
   }
 }
 
+async function loadHardLevels() {
+  elements.hardLevelsChip.textContent = "loading";
+  elements.hardLevelsChip.className = "chip chip-idle";
+  elements.hardLevelSummary.textContent = "Loading hard-level candidates from the CSV...";
+
+  try {
+    state.hardLevels = await fetchJson("/api/hard-levels");
+    state.hardLevelsError = null;
+    render();
+  } catch (error) {
+    state.hardLevels = null;
+    state.hardLevelsError = error.message;
+    render();
+  }
+}
+
+function applyHardLevelCandidate(rank) {
+  const candidate = (state.hardLevels?.candidates || []).find(
+    (entry) => entry.rank === rank
+  );
+  if (!candidate) {
+    return;
+  }
+  state.selectedHardLevelRank = rank;
+
+  elements.sizeInput.value = String(candidate.size);
+  elements.seedInput.value = String(candidate.seed);
+  elements.removedMinInput.value = String(candidate.removedFractionRange[0]);
+  elements.removedMaxInput.value = String(candidate.removedFractionRange[1]);
+  elements.clusterCountMinInput.value = String(candidate.clusterCountRange[0]);
+  elements.clusterCountMaxInput.value = String(candidate.clusterCountRange[1]);
+  elements.clusterSizeMinInput.value = String(candidate.clusterSizeRange[0]);
+  elements.clusterSizeMaxInput.value = String(candidate.clusterSizeRange[1]);
+
+  generateGrid();
+}
+
 function setBusy(busy) {
   const disabled = Boolean(busy);
   elements.generateButton.disabled = disabled;
@@ -375,6 +401,10 @@ async function generateGrid() {
       removedMin: String(options.removedMin),
       removedMax: String(options.removedMax),
     });
+    if (options.clusterCountMin !== null) query.set("clusterCountMin", String(options.clusterCountMin));
+    if (options.clusterCountMax !== null) query.set("clusterCountMax", String(options.clusterCountMax));
+    if (options.clusterSizeMin !== null) query.set("clusterSizeMin", String(options.clusterSizeMin));
+    if (options.clusterSizeMax !== null) query.set("clusterSizeMax", String(options.clusterSizeMax));
     state.gridData = await fetchJson(`/api/grid?${query.toString()}`);
     state.displayedSolution = null;
     state.optimalReference = null;
@@ -391,19 +421,7 @@ async function generateGrid() {
   }
 }
 
-function confirmOptimalRuntime() {
-  if (!state.gridData) {
-    return false;
-  }
-  if (state.gridData.openCells <= 48) {
-    return true;
-  }
-  return window.confirm(
-    `This grid has ${state.gridData.openCells} open cells. The exact solver is exponential and may take a while. Continue?`
-  );
-}
-
-async function requestSolution(solver, options = {}) {
+async function requestSolution(solver) {
   if (!state.gridData) {
     throw new Error("Generate a grid first.");
   }
@@ -416,10 +434,6 @@ async function requestSolution(solver, options = {}) {
     seed: Number(elements.seedInput.value),
   };
 
-  if (solver === "optimal") {
-    return requestOptimalSolution(body, options);
-  }
-
   const payload = await fetchJson("/api/solve", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -427,42 +441,6 @@ async function requestSolution(solver, options = {}) {
   });
 
   return payload.solution;
-}
-
-async function requestOptimalSolution(body, { onProgress } = {}) {
-  let finalSolution = null;
-
-  await streamJsonLines(
-    "/api/solve-stream",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    },
-    {
-      onMessage(payload) {
-        if (payload.type === "progress") {
-          onProgress?.(payload);
-          return;
-        }
-
-        if (payload.type === "solution") {
-          finalSolution = payload.solution;
-          return;
-        }
-
-        if (payload.type === "error") {
-          throw new Error(payload.error || "Optimal solve failed.");
-        }
-      },
-    }
-  );
-
-  if (!finalSolution) {
-    throw new Error("Optimal solve ended without returning a solution.");
-  }
-
-  return finalSolution;
 }
 
 function pauseManualInput() {
@@ -477,9 +455,6 @@ function pauseManualInput() {
 
 async function solveDisplayed() {
   const solver = elements.solverSelect.value;
-  if (solver === "optimal" && !confirmOptimalRuntime()) {
-    return;
-  }
 
   stopPlayback();
   pauseManualInput();
@@ -487,17 +462,7 @@ async function solveDisplayed() {
   setStatus(`Solving ${solver}...`, "info");
 
   try {
-    const solution = await requestSolution(solver, {
-      onProgress(payload) {
-        if (!payload.solution) {
-          return;
-        }
-        state.displayedSolution = payload.solution;
-        state.currentStep = payload.solution.moveCount;
-        setStatus(payload.message || "Solving optimal...", "info");
-        render();
-      },
-    });
+    const solution = await requestSolution(solver);
     state.displayedSolution = solution;
     state.currentStep = solution.moveCount;
     if (solver === "optimal") {
@@ -513,10 +478,6 @@ async function solveDisplayed() {
 }
 
 async function loadOptimalReference() {
-  if (!confirmOptimalRuntime()) {
-    return;
-  }
-
   stopPlayback();
   pauseManualInput();
   setBusy(true);
@@ -526,17 +487,7 @@ async function loadOptimalReference() {
   const previousStep = state.currentStep;
 
   try {
-    state.optimalReference = await requestSolution("optimal", {
-      onProgress(payload) {
-        if (!payload.solution) {
-          return;
-        }
-        state.displayedSolution = payload.solution;
-        state.currentStep = payload.solution.moveCount;
-        setStatus(payload.message || "Loading optimal reference...", "info");
-        render();
-      },
-    });
+    state.optimalReference = await requestSolution("optimal");
     if (previousDisplayedSolution) {
       state.displayedSolution = previousDisplayedSolution;
       state.currentStep = Math.min(previousStep, previousDisplayedSolution.moveCount);
@@ -546,13 +497,6 @@ async function loadOptimalReference() {
     }
     setStatus("Loaded optimal reference for the current grid.", "success");
   } catch (error) {
-    if (previousDisplayedSolution) {
-      state.displayedSolution = previousDisplayedSolution;
-      state.currentStep = Math.min(previousStep, previousDisplayedSolution.moveCount);
-    } else {
-      state.displayedSolution = null;
-      state.currentStep = 0;
-    }
     setStatus(error.message, "error");
   } finally {
     setBusy(false);
@@ -847,7 +791,13 @@ function renderStats() {
     elements.gridStats.textContent = "No grid loaded.";
   } else {
     const grid = state.gridData;
-    elements.gridStats.textContent = `Grid ${grid.rows}x${grid.cols} | seed ${grid.seed} | open ${grid.openCells} | removed ${grid.removedCells} | density ${grid.density.toFixed(2)}`;
+    const countRange = grid.clusterCountRange;
+    const sizeRange = grid.clusterSizeRange;
+    const clusterText =
+      countRange && sizeRange
+        ? ` | clusters ${countRange[0]}-${countRange[1]} of size ${sizeRange[0]}-${sizeRange[1]}`
+        : "";
+    elements.gridStats.textContent = `Grid ${grid.rows}x${grid.cols} | seed ${grid.seed} | open ${grid.openCells} | removed ${grid.removedCells} | density ${grid.density.toFixed(2)}${clusterText}`;
   }
 
   if (!state.displayedSolution) {
@@ -919,8 +869,89 @@ function renderStepControls() {
   syncPlaybackControls();
 }
 
+function renderHardLevels() {
+  if (state.hardLevelsError) {
+    elements.hardLevelsChip.textContent = "error";
+    elements.hardLevelsChip.className = "chip chip-paused";
+    elements.hardLevelSummary.textContent = state.hardLevelsError;
+    elements.hardLevelSelect.innerHTML = '<option value="">Unavailable</option>';
+    elements.hardLevelSelect.disabled = true;
+    return;
+  }
+
+  if (!state.hardLevels) {
+    elements.hardLevelsChip.textContent = "loading";
+    elements.hardLevelsChip.className = "chip chip-idle";
+    elements.hardLevelSummary.textContent = "Loading hard-level candidates from the CSV...";
+    elements.hardLevelSelect.innerHTML = '<option value="">Loading...</option>';
+    elements.hardLevelSelect.disabled = true;
+    return;
+  }
+
+  if (!state.hardLevels.available) {
+    elements.hardLevelsChip.textContent = "missing";
+    elements.hardLevelsChip.className = "chip chip-paused";
+    elements.hardLevelSummary.textContent =
+      state.hardLevels.message || "Hard-levels CSV not found.";
+    elements.hardLevelSelect.innerHTML = '<option value="">Not generated</option>';
+    elements.hardLevelSelect.disabled = true;
+    return;
+  }
+
+  const candidates = state.hardLevels.candidates || [];
+  elements.hardLevelsChip.textContent = `${candidates.length} candidates`;
+  elements.hardLevelsChip.className = "chip chip-active";
+  elements.hardLevelSelect.disabled = isBusy() || candidates.length === 0;
+
+  const selected = candidates.find(
+    (entry) => entry.rank === state.selectedHardLevelRank
+  );
+  elements.hardLevelSelect.innerHTML = [
+    `<option value="" ${selected ? "" : "selected"}>Choose a candidate...</option>`,
+    ...candidates.map(
+      (entry) => `<option value="${entry.rank}" ${
+        entry.rank === state.selectedHardLevelRank ? "selected" : ""
+      }>${escapeHtml(
+        `#${entry.rank} ${entry.regime} ${entry.size}x${entry.size} seed=${entry.seed} | score ${entry.score.toFixed(2)}`
+      )}</option>`
+    ),
+  ].join("");
+
+  if (!selected) {
+    elements.hardLevelSummary.textContent =
+      "Select a candidate to load its grid and form params.";
+    return;
+  }
+
+  const m = selected.metrics;
+  const altStr =
+    m.altOptimaFraction === null || m.altOptimaFraction === undefined
+      ? "n/a"
+      : `${Math.round(m.altOptimaFraction * 100)}%`;
+  elements.hardLevelSummary.textContent =
+    `#${selected.rank} | ${selected.regime} | ${selected.size}x${selected.size} | seed ${selected.seed} | ` +
+    `score ${selected.score.toFixed(3)} | optimal ${m.optimalMoves} moves (${m.optimalOverlap} overlaps) | ` +
+    `snake ${m.snakeMoves} | gap ${(m.heuristicGap * 100).toFixed(0)}% | ` +
+    `turn ${Math.round(m.turnDensity * 100)}% | bridges ${m.bridges} | choice ${m.choicePoints} | alt ${altStr}`;
+}
+
+function handleHardLevelChange(event) {
+  const raw = event.target.value;
+  if (raw === "") {
+    state.selectedHardLevelRank = null;
+    render();
+    return;
+  }
+  const rank = Number(raw);
+  if (!Number.isInteger(rank)) {
+    return;
+  }
+  applyHardLevelCandidate(rank);
+}
+
 function render() {
   renderHumanResults();
+  renderHardLevels();
   renderStats();
   renderManualControls();
   renderStepControls();
@@ -1248,6 +1279,7 @@ elements.showManualButton.addEventListener("click", () => showManualPath());
 elements.solverSelect.addEventListener("change", syncSolverControls);
 elements.humanConfigSelect.addEventListener("change", handleHumanConfigChange);
 elements.humanAttemptSelect.addEventListener("change", handleHumanAttemptChange);
+elements.hardLevelSelect.addEventListener("change", handleHardLevelChange);
 elements.humanPrevButton.addEventListener("click", () => navigateHumanAttempt(-1));
 elements.humanNextButton.addEventListener("click", () => navigateHumanAttempt(1));
 elements.prevButton.addEventListener("click", stepBack);
@@ -1266,3 +1298,4 @@ window.addEventListener("keydown", handleManualKeydown);
 
 generateGrid();
 loadHumanResults();
+loadHardLevels();
